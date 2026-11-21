@@ -17,7 +17,10 @@ export const AppLogo: React.FC<AppLogoProps> = ({
   const isImage =
     !failed &&
     Boolean(logo) &&
-    (logo.startsWith('data:image/') || logo.startsWith('http://') || logo.startsWith('https://'));
+    (logo.startsWith('data:image/') ||
+      logo.startsWith('http://') ||
+      logo.startsWith('https://') ||
+      logo.startsWith('/'));
 
   if (isImage) {
     return (

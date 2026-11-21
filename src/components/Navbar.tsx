@@ -3,12 +3,14 @@ import { Bell, Menu, X } from 'lucide-react';
 import { AppSettings, PageId, UserProfile } from '../types';
 import { AvatarDisplay } from './AvatarDisplay';
 import { AppLogo } from './AppLogo';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface NavbarProps {
   currentPage: PageId;
   user: UserProfile;
   appSettings: AppSettings;
   unreadNotificationsCount: number;
+  unreadDiscussionsCount: number;
   onNavigate: (page: PageId) => void;
   onOpenNotifications: () => void;
 }
@@ -27,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   user,
   appSettings,
   unreadNotificationsCount,
+  unreadDiscussionsCount,
   onNavigate,
   onOpenNotifications,
 }) => {
@@ -73,18 +76,24 @@ export const Navbar: React.FC<NavbarProps> = ({
           <nav className="hidden lg:flex items-center gap-5" aria-label="Navigation principale">
             {NAV_ITEMS.map(item => {
               const isActive = currentPage === item.id;
+              const showBadge = item.id === 'discussions' && unreadDiscussionsCount > 0;
               return (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => handleSelectPage(item.id)}
-                  className={`relative py-2 text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                  className={`relative py-2 text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
                     isActive
                       ? 'text-accent'
                       : 'text-[#a09888] hover:text-[#e8e0d0]'
                   }`}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {showBadge && (
+                    <span className="px-1.5 py-0.2 bg-red-500 rounded-full text-[10px] font-bold text-white tabular-nums">
+                      {unreadDiscussionsCount > 9 ? '9+' : unreadDiscussionsCount}
+                    </span>
+                  )}
                   {isActive && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />
                   )}
@@ -95,6 +104,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Zone 3: User Actions */}
           <div className="flex items-center gap-2.5 shrink-0">
+            <div className="hidden sm:block">
+              <PWAInstallButton />
+            </div>
             <button
               type="button"
               onClick={onOpenNotifications}
@@ -132,18 +144,24 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex flex-col gap-1 max-w-7xl mx-auto">
             {NAV_ITEMS.map(item => {
               const isActive = currentPage === item.id;
+              const showBadge = item.id === 'discussions' && unreadDiscussionsCount > 0;
               return (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => handleSelectPage(item.id)}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${
+                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-colors cursor-pointer flex items-center justify-between ${
                     isActive
                       ? 'bg-accent text-accent-contrast'
                       : 'text-[#a09888] hover:text-white hover:bg-[#252840]'
                   }`}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {showBadge && (
+                    <span className="px-2 py-0.5 bg-red-500 rounded-full text-xs font-bold text-white tabular-nums">
+                      {unreadDiscussionsCount} non lu{unreadDiscussionsCount > 1 ? 's' : ''}
+                    </span>
+                  )}
                 </button>
               );
             })}

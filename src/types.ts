@@ -107,6 +107,7 @@ export interface Conversation {
   members?: string[];
   isGeneral?: boolean;
   messages: ChatMessage[];
+  unreadCount?: number;
 }
 
 export interface ToastItem {

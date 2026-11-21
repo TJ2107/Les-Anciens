@@ -2,7 +2,7 @@ import { AppSettings } from '../types';
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   appName: 'Les Anciens',
-  logo: '🎓',
+  logo: '/assets/aistudio/logo_ancien_323e7a8f.png',
   accentColor: '#d4a843',
 };
 
@@ -23,6 +23,7 @@ export const ACCENT_COLOR_PRESETS: AccentPreset[] = [
 ];
 
 export const LOGO_PRESETS: string[] = [
+  '/assets/aistudio/logo_ancien_323e7a8f.png',
   '🎓',
   '🏛️',
   '🌍',

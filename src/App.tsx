@@ -41,6 +41,8 @@ import { CotisationsPage } from './components/CotisationsPage';
 import { DiscussionsPage } from './components/DiscussionsPage';
 import { ProfilePage } from './components/ProfilePage';
 import { SettingsPage } from './components/SettingsPage';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { PWAInstallButton } from './components/PWAInstallButton';
 import {
   AddGalleryPhotoModalBody,
   AlumnusModalBody,
@@ -275,6 +277,21 @@ export default function App() {
     return INITIAL_CONVERSATIONS;
   });
   const [activeChatId, setActiveChatId] = useState<number>(INITIAL_CONVERSATIONS[0].id);
+
+  useEffect(() => {
+    if (currentPage === 'discussions') {
+      setConversations(prev =>
+        prev.map(c => (c.id === activeChatId ? { ...c, unreadCount: 0 } : c))
+      );
+    }
+  }, [currentPage, activeChatId]);
+
+  const handleSelectChat = (chatId: number) => {
+    setActiveChatId(chatId);
+    setConversations(prev =>
+      prev.map(c => (c.id === chatId ? { ...c, unreadCount: 0 } : c))
+    );
+  };
 
   const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>(() => {
     try {
@@ -1119,6 +1136,10 @@ export default function App() {
     return (
       <>
         <ToastContainer toasts={toasts} />
+        <OfflineIndicator />
+        <div className="fixed top-4 right-4 z-50">
+          <PWAInstallButton />
+        </div>
         <AuthScreen
           appSettings={appSettings}
           onLoginSuccess={handleLoginSuccess}
@@ -1130,6 +1151,7 @@ export default function App() {
 
   const totalMessagesCount = conversations.reduce((sum, c) => sum + c.messages.length, 0);
   const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+  const unreadDiscussionsCount = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0f1117] text-[#e8e0d0]">
@@ -1259,6 +1281,7 @@ export default function App() {
         user={user}
         appSettings={appSettings}
         unreadNotificationsCount={unreadNotificationsCount}
+        unreadDiscussionsCount={unreadDiscussionsCount}
         onNavigate={setCurrentPage}
         onOpenNotifications={() => setActiveModal({ type: 'notifications' })}
       />
@@ -1333,7 +1356,7 @@ export default function App() {
           <DiscussionsPage
             conversations={conversations}
             activeChatId={activeChatId}
-            onSelectChat={setActiveChatId}
+            onSelectChat={handleSelectChat}
             onSendMessage={handleSendMessage}
             onEditMessage={handleEditMessage}
             onDeleteMessage={handleDeleteMessage}
@@ -1365,10 +1388,14 @@ export default function App() {
       </main>
 
       <footer className="border-t border-accent/12 py-5 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto text-center text-xs text-[#807868]">
-          © 2026 Empreintes Technologies. Tous droits réservés.
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#807868]">
+          <div>© 2026 Empreintes Technologies. Tous droits réservés.</div>
+          <div className="flex items-center gap-3">
+            <PWAInstallButton />
+          </div>
         </div>
       </footer>
+      <OfflineIndicator />
     </div>
   );
 }

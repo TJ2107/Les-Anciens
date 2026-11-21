@@ -259,6 +259,7 @@ export const DiscussionsPage: React.FC<DiscussionsPageProps> = ({
                 <div className="max-h-60 overflow-y-auto divide-y divide-accent/8">
                   {conversations.map(c => {
                     const isSelected = c.id === activeChat?.id;
+                    const unread = c.unreadCount || 0;
                     return (
                       <button
                         key={c.id}
@@ -273,12 +274,12 @@ export const DiscussionsPage: React.FC<DiscussionsPageProps> = ({
                           isSelected ? 'bg-accent/15 text-white' : 'text-[#e8e0d0] hover:bg-[#252840]'
                         }`}
                       >
-                        <span className="w-8 h-8 rounded-full bg-[#252840] flex items-center justify-center text-base shrink-0 overflow-hidden">
+                        <span className="w-8 h-8 rounded-full bg-[#252840] flex items-center justify-center text-base shrink-0 overflow-hidden relative">
                           <AvatarDisplay avatar={c.avatar} alt={c.name} fallback="💬" />
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold truncate flex items-center gap-1.5">
-                            <span>{c.name}</span>
+                            <span className="truncate">{c.name}</span>
                             {c.isGeneral && (
                               <span className="text-[10px] font-medium text-accent">· Public</span>
                             )}
@@ -288,7 +289,12 @@ export const DiscussionsPage: React.FC<DiscussionsPageProps> = ({
                             {c.members && c.members.length > 0 ? ` · ${c.members.length} invité(s)` : ''}
                           </div>
                         </div>
-                        {isSelected && <Check size={16} className="text-accent shrink-0" />}
+                        {unread > 0 && (
+                          <span className="px-2 py-0.5 bg-red-500 text-white text-[11px] font-bold rounded-full tabular-nums shrink-0">
+                            {unread}
+                          </span>
+                        )}
+                        {isSelected && unread === 0 && <Check size={16} className="text-accent shrink-0" />}
                       </button>
                     );
                   })}
