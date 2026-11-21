@@ -1,0 +1,1340 @@
+# 🎓 "Les Anciens" — Application Réseau des Anciens Étudiants
+
+Application web complète, responsive, en un seul fichier HTML.
+
+```html
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Les Anciens — Réseau des Anciens Étudiants</title>
+<style>
+:root{
+--bg:#0f1117;--bg2:#1a1d2e;--bg3:#252840;--bg4:#2d3050;
+--gold:#d4a843;--gold2:#f0c75e;--gold3:#b8922e;
+--accent:#e8b930;--accent2:#f5d76e;
+--text:#e8e0d0;--text2:#a09888;--text3:#605848;
+--red:#e74c3c;--green:#2ecc71;--blue:#3498db;--purple:#9b59b6;
+--border:rgba(212,168,67,.15);--border2:rgba(212,168,67,.3);
+--shadow:0 4px 20px rgba(0,0,0,.4);--shadow2:0 8px 40px rgba(0,0,0,.5);
+--radius:12px;--radius2:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.6;min-height:100vh}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--gold3);border-radius:3px}
+a{color:var(--gold);text-decoration:none}
+img{max-width:100%;border-radius:var(--radius)}
+button{font-family:inherit;cursor:pointer}
+
+/* ═══ NAVIGATION ═══ */
+.navbar{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(15,17,23,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:10px;font-size:1.4em;font-weight:800;color:var(--gold)}
+.nav-logo span{background:linear-gradient(135deg,var(--gold),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:4px}
+.nav-link{padding:8px 18px;border-radius:var(--radius);color:var(--text2);font-size:.95em;font-weight:600;transition:all .2s;cursor:pointer;border:none;background:none;position:relative}
+.nav-link:hover,.nav-link.active{color:var(--gold);background:rgba(212,168,67,.1)}
+.nav-link.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--gold);border-radius:1px}
+.nav-user{display:flex;align-items:center;gap:12px}
+.nav-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--purple));display:flex;align-items:center;justify-content:center;font-size:1.1em;cursor:pointer;border:2px solid var(--border2)}
+.nav-bell{position:relative;width:38px;height:38px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1em}
+.nav-bell .badge{position:absolute;top:-2px;right:-2px;width:18px;height:18px;background:var(--red);border-radius:50%;font-size:.65em;display:flex;align-items:center;justify-content:center;color:#fff}
+.menu-toggle{display:none;background:none;border:none;color:var(--text);font-size:1.5em;cursor:pointer}
+
+/* ═══ LAYOUT ═══ */
+.main{margin-top:64px;padding:20px;max-width:1200px;margin-left:auto;margin-right:auto}
+.page{display:none}
+.page.active{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ CARDS ═══ */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:20px;margin-bottom:16px;transition:all .2s}
+.card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.card-title{font-size:1.15em;font-weight:700;color:var(--gold)}
+.card-subtitle{font-size:.85em;color:var(--text2)}
+
+/* ═══ BUTTONS ═══ */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:var(--radius);font-size:.92em;font-weight:600;border:none;transition:all .2s}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold3));color:#111}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(212,168,67,.4)}
+.btn-outline{background:transparent;border:2px solid var(--border2);color:var(--gold)}
+.btn-outline:hover{background:rgba(212,168,67,.1);transform:translateY(-1px)}
+.btn-sm{padding:6px 14px;font-size:.82em}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#c0392b}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-green{background:var(--green);color:#111}
+
+/* ═══ FORMS ═══ */
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:.9em;font-weight:600;color:var(--text2);margin-bottom:6px}
+.form-input{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:var(--radius);background:var(--bg3);color:var(--text);font-size:.95em;transition:all .2s;font-family:inherit}
+.form-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,168,67,.15)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-select{appearance:none;background:var(--bg3);border:2px solid var(--border);border-radius:var(--radius);padding:12px 16px;color:var(--text);font-size:.95em;width:100%}
+.form-textarea{min-height:80px;resize:vertical}
+
+/* ═══ AUTH SCREEN ═══ */
+.auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200}
+.auth-screen.hidden{display:none}
+.auth-container{width:min(480px,92vw);text-align:center}
+.auth-logo{font-size:3em;margin-bottom:8px}
+.auth-title{font-size:2em;font-weight:800;color:var(--gold);margin-bottom:4px}
+.auth-sub{color:var(--text2);margin-bottom:28px}
+.auth-tabs{display:flex;gap:0;margin-bottom:20px;background:var(--bg3);border-radius:var(--radius);overflow:hidden}
+.auth-tab{flex:1;padding:12px;border:none;background:transparent;color:var(--text2);font-weight:600;font-size:.95em;cursor:pointer;transition:all .2s}
+.auth-tab.active{background:var(--gold);color:#111}
+
+/* ═══ DASHBOARD ═══ */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:18px;text-align:center}
+.stat-icon{font-size:2em;margin-bottom:6px}
+.stat-number{font-size:1.8em;font-weight:800;color:var(--gold)}
+.stat-label{font-size:.82em;color:var(--text2)}
+.welcome-banner{background:linear-gradient(135deg,rgba(212,168,67,.15),rgba(155,89,182,.1));border:1px solid var(--border2);border-radius:var(--radius2);padding:28px;margin-bottom:20px;display:flex;align-items:center;gap:20px}
+.welcome-avatar{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--purple));display:flex;align-items:center;justify-content:center;font-size:2em;flex-shrink:0}
+.welcome-info h2{color:var(--gold);font-size:1.4em}
+.welcome-info p{color:var(--text2);font-size:.95em}
+
+/* ═══ ALUMNI LIST ═══ */
+.alumni-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.alumni-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:18px;transition:all .2s;display:flex;gap:14px}
+.alumni-card:hover{border-color:var(--gold);transform:translateY(-3px);box-shadow:var(--shadow2)}
+.alumni-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5em;flex-shrink:0}
+.alumni-info{flex:1}
+.alumni-name{font-weight:700;font-size:1.05em;color:var(--text)}
+.alumni-detail{font-size:.82em;color:var(--text2);margin:2px 0}
+.alumni-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.72em;font-weight:700}
+.badge-online{background:rgba(46,204,113,.2);color:var(--green)}
+.badge-offline{background:rgba(150,150,150,.2);color:var(--text2)}
+.badge-promo{background:rgba(212,168,67,.2);color:var(--gold)}
+.badge-new{background:rgba(52,152,219,.2);color:var(--blue)}
+.badge-memorial{background:rgba(231,76,60,.15);color:var(--red)}
+
+/* ═══ POSTS / FEED ═══ */
+.post-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:20px;margin-bottom:14px}
+.post-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.post-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2em;flex-shrink:0}
+.post-meta{flex:1}
+.post-author{font-weight:700;font-size:.98em}
+.post-time{font-size:.78em;color:var(--text3)}
+.post-type{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.72em;font-weight:700;margin-left:8px}
+.post-body{margin-bottom:14px;line-height:1.7;color:var(--text)}
+.post-media{border-radius:var(--radius);overflow:hidden;margin:12px 0;max-height:350px;background:var(--bg3)}
+.post-media img,.post-media video{width:100%;height:100%;object-fit:cover}
+.post-actions{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+.post-action{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);background:transparent;border:none;color:var(--text2);font-size:.88em;cursor:pointer;transition:all .2s}
+.post-action:hover{background:rgba(212,168,67,.1);color:var(--gold)}
+.post-action.liked{color:var(--red)}
+.comment-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.comment{display:flex;gap:10px;margin-bottom:12px}
+.comment-avatar{width:32px;height:32px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:.85em;flex-shrink:0}
+.comment-body{flex:1}
+.comment-author{font-weight:700;font-size:.85em;color:var(--gold)}
+.comment-text{font-size:.88em;color:var(--text2)}
+.comment-input{display:flex;gap:8px;margin-top:10px}
+.comment-input input{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3);color:var(--text);font-size:.88em}
+
+/* ═══ POST CREATOR ═══ */
+.post-creator{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:20px;margin-bottom:16px}
+.post-creator-top{display:flex;gap:12px;align-items:flex-start}
+.post-creator-top textarea{flex:1;min-height:60px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3);color:var(--text);font-family:inherit;resize:vertical;font-size:.95em}
+.post-creator-actions{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.post-media-preview{margin-top:12px;border-radius:var(--radius);overflow:hidden;max-height:200px;display:none}
+.post-type-select{display:flex;gap:8px;flex-wrap:wrap}
+.type-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:.82em;cursor:pointer;transition:all .2s}
+.type-btn.active{background:var(--gold);color:#111;border-color:var(--gold)}
+
+/* ═══ COTISATIONS ═══ */
+.coti-table{width:100%;border-collapse:collapse}
+.coti-table th{background:var(--bg3);padding:12px 14px;text-align:left;font-size:.85em;color:var(--gold);border-bottom:2px solid var(--border2)}
+.coti-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:.9em}
+.coti-table tr:hover{background:rgba(212,168,67,.05)}
+.status-paid{color:var(--green);font-weight:700}
+.status-pending{color:var(--gold2);font-weight:700}
+.status-overdue{color:var(--red);font-weight:700}
+.progress-ring{width:80px;height:80px;position:relative}
+.progress-ring svg{transform:rotate(-90deg)}
+.progress-ring circle{fill:none;stroke-width:6;stroke-linecap:round}
+.progress-ring .bg{stroke:var(--bg3)}
+.progress-ring .fg{stroke:var(--gold);transition:stroke-dashoffset .5s}
+.progress-ring .label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.9em;font-weight:800;color:var(--gold)}
+
+/* ═══ DISCUSSIONS ═══ */
+.chat-container{display:grid;grid-template-columns:280px 1fr;gap:16px;height:calc(100vh - 120px)}
+.chat-sidebar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);overflow-y:auto}
+.chat-item{display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;transition:all .2s;border-bottom:1px solid var(--border)}
+.chat-item:hover,.chat-item.active{background:rgba(212,168,67,.08)}
+.chat-item-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1em;flex-shrink:0}
+.chat-item-info{flex:1;min-width:0}
+.chat-item-name{font-weight:700;font-size:.92em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-item-preview{font-size:.8em;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-item-time{font-size:.72em;color:var(--text3)}
+.chat-main{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);display:flex;flex-direction:column}
+.chat-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.chat-messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+.msg{display:flex;gap:10px;max-width:75%}
+.msg.sent{align-self:flex-end;flex-direction:row-reverse}
+.msg-avatar{width:32px;height:32px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:.85em;flex-shrink:0}
+.msg-bubble{padding:10px 16px;border-radius:18px;font-size:.9em;line-height:1.5}
+.msg.received .msg-bubble{background:var(--bg3);border-bottom-left-radius:4px}
+.msg.sent .msg-bubble{background:var(--gold);color:#111;border-bottom-right-radius:4px}
+.msg-time{font-size:.68em;color:var(--text3);margin-top:4px}
+.chat-input{display:flex;gap:8px;padding:14px 18px;border-top:1px solid var(--border)}
+.chat-input input{flex:1;padding:12px 16px;border:1px solid var(--border);border-radius:24px;background:var(--bg3);color:var(--text);font-size:.92em}
+.chat-input input:focus{outline:none;border-color:var(--gold)}
+
+/* ═══ MODAL ═══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:150;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s}
+.modal-overlay.hidden{display:none}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius2);padding:28px;width:min(520px,92vw);max-height:85vh;overflow-y:auto;animation:scaleIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg3);border:none;color:var(--text);font-size:1.1em;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-title{font-size:1.3em;font-weight:800;color:var(--gold);margin-bottom:16px}
+
+/* ═══ SEARCH & FILTERS ═══ */
+.search-bar{display:flex;gap:10px;margin-bottom:16px}
+.search-input{flex:1;padding:12px 18px;border:2px solid var(--border);border-radius:28px;background:var(--bg2);color:var(--text);font-size:.95em}
+.search-input:focus{outline:none;border-color:var(--gold)}
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-chip{padding:8px 18px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:.85em;cursor:pointer;transition:all .2s}
+.filter-chip.active{background:var(--gold);color:#111;border-color:var(--gold)}
+
+/* ═══ NOTIFICATION TOAST ═══ */
+.toast-container{position:fixed;top:80px;right:20px;z-index:300;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:14px 20px;min-width:280px;box-shadow:var(--shadow2);animation:slideIn .3s ease;display:flex;align-items:center;gap:10px}
+.toast.success{border-left:4px solid var(--green)}
+.toast.error{border-left:4px solid var(--red)}
+.toast.info{border-left:4px solid var(--gold)}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:768px){
+.navbar{padding:0 12px}
+.nav-links{display:none;position:absolute;top:64px;left:0;right:0;background:var(--bg2);flex-direction:column;padding:12px;border-bottom:1px solid var(--border)}
+.nav-links.open{display:flex}
+.menu-toggle{display:block}
+.nav-user .nav-name{display:none}
+.stats-grid{grid-template-columns:repeat(2,1fr)}
+.form-row{grid-template-columns:1fr}
+.chat-container{grid-template-columns:1fr}
+.chat-sidebar{display:none}
+.chat-sidebar.open{display:block;position:absolute;left:0;top:0;bottom:0;z-index:10;width:280px}
+.alumni-grid{grid-template-columns:1fr}
+.welcome-banner{flex-direction:column;text-align:center}
+.msg{max-width:90%}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ ÉCRAN AUTHENTIFICATION ═══ -->
+<div class="auth-screen" id="authScreen">
+<div class="auth-container">
+<div class="auth-logo">🎓</div>
+<h1 class="auth-title">Les Anciens</h1>
+<p class="auth-sub">Réseau des anciens étudiants du monde entier</p>
+<div class="auth-tabs">
+<button class="auth-tab active" onclick="Auth.switchTab('login')">Connexion</button>
+<button class="auth-tab" onclick="Auth.switchTab('register')">Inscription</button>
+</div>
+
+<!-- Connexion -->
+<div id="loginForm">
+<div class="form-group">
+<input type="email" class="form-input" id="loginEmail" placeholder="Adresse email">
+</div>
+<div class="form-group">
+<input type="password" class="form-input" id="loginPass" placeholder="Mot de passe">
+</div>
+<button class="btn btn-gold" style="width:100%" onclick="Auth.login()">Se connecter</button>
+<button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="Auth.demo()">🎮 Mode démo</button>
+</div>
+
+<!-- Inscription -->
+<div id="registerForm" style="display:none">
+<div class="form-row">
+<div class="form-group">
+<input type="text" class="form-input" id="regName" placeholder="Nom complet">
+</div>
+<div class="form-group">
+<input type="email" class="form-input" id="regEmail" placeholder="Email">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<input type="password" class="form-input" id="regPass" placeholder="Mot de passe">
+</div>
+<div class="form-group">
+<select class="form-select" id="regCountry">
+<option value="">Pays</option>
+<option>🇨🇲 Cameroun</option>
+<option>🇸🇳 Sénégal</option>
+<option>🇨🇮 Côte d'Ivoire</option>
+<option>🇨🇩 RD Congo</option>
+<option>🇧🇫 Burkina Faso</option>
+<option>🇲🇱 Mali</option>
+<option>🇬🇦 Gabon</option>
+<option>🇬🇳 Guinée</option>
+<option>🇹🇬 Togo</option>
+<option>🇧🇯 Bénin</option>
+<option>🇫🇷 France</option>
+<option>🇨🇦 Canada</option>
+<option>🇧🇪 Belgique</option>
+<option>Other</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<input type="text" class="form-input" id="regUniv" placeholder="Université">
+</div>
+<div class="form-group">
+<select class="form-select" id="regYear">
+<option value="">Année de promotion</option>
+<option>2024</option><option>2023</option><option>2022</option>
+<option>2021</option><option>2020</option><option>2019</option>
+<option>2018</option><option>2017</option><option>2016</option>
+<option>2015</option><option>2010</option><option>2005</option>
+<option>2000</option><option>1995</option><option>1990</option>
+<option>Other</option>
+</select>
+</div>
+</div>
+<div class="form-group">
+<select class="form-select" id="regFiliere">
+<option value="">Filière / Spécialité</option>
+<option>Informatique</option><option>Médecine</option>
+<option>Droit</option><option>Gestion</option>
+<option>Ingénierie</option><option>Lettres</option>
+<option>Sciences</option><option>Économie</option>
+<option>Pharmacie</option><option>Autre</option>
+</select>
+</div>
+<button class="btn btn-gold" style="width:100%" onclick="Auth.register()">Créer mon compte</button>
+</div>
+</div>
+</div>
+
+<!-- ═══ NAVIGATION ═══ -->
+<nav class="navbar" id="navbar" style="display:none">
+<button class="menu-toggle" onclick="App.toggleMenu()">☰</button>
+<div class="nav-logo">🎓 <span>Les Anciens</span></div>
+<div class="nav-links" id="navLinks">
+<button class="nav-link active" onclick="App.nav('dashboard')" data-page="dashboard">📊 Tableau de bord</button>
+<button class="nav-link" onclick="App.nav('alumni')" data-page="alumni">👥 Anciens</button>
+<button class="nav-link" onclick="App.nav('info')" data-page="info">📰 Informations</button>
+<button class="nav-link" onclick="App.nav('cotisations')" data-page="cotisations">💰 Cotisations</button>
+<button class="nav-link" onclick="App.nav('discussions')" data-page="discussions">💬 Discussions</button>
+</div>
+<div class="nav-user">
+<div class="nav-bell" onclick="App.showNotifications()">🔔<div class="badge">3</div></div>
+<div class="nav-avatar" id="navAvatar" onclick="App.nav('profile')">👤</div>
+</div>
+</nav>
+
+<!-- ═══ CONTENU PRINCIPAL ═══ -->
+<div class="main" id="mainContent" style="display:none">
+
+<!-- PAGE DASHBOARD -->
+<div class="page active" id="page-dashboard">
+<div class="welcome-banner">
+<div class="welcome-avatar" id="dashAvatar">👤</div>
+<div class="welcome-info">
+<h2>Bonjour, <span id="dashName">Ancien</span> ! 👋</h2>
+<p id="dashSubtitle">Bienvenue sur votre espace ancien étudiant</p>
+</div>
+</div>
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-icon">👥</div><div class="stat-number" id="statAlumni">0</div><div class="stat-label">Anciens inscrits</div></div>
+<div class="stat-card"><div class="stat-icon">📰</div><div class="stat-number" id="statPosts">0</div><div class="stat-label">Publications</div></div>
+<div class="stat-card"><div class="stat-icon">💰</div><div class="stat-number" id="statCoti">0</div><div class="stat-label">Cotisations</div></div>
+<div class="stat-card"><div class="stat-icon">💬</div><div class="stat-number" id="statMessages">0</div><div class="stat-label">Messages</div></div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">📢 Dernières informations</div>
+<button class="btn btn-outline btn-sm" onclick="App.nav('info')">Voir tout</button>
+</div>
+<div id="dashNews"></div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">👥 Nouveaux membres</div>
+<button class="btn btn-outline btn-sm" onclick="App.nav('alumni')">Voir tout</button>
+</div>
+<div class="alumni-grid" id="dashNewMembers"></div>
+</div>
+</div>
+
+<!-- PAGE ALUMNI -->
+<div class="page" id="page-alumni">
+<h2 style="color:var(--gold);margin-bottom:16px">👥 Liste des Anciens</h2>
+<div class="search-bar">
+<input type="text" class="search-input" id="alumniSearch" placeholder="🔍 Rechercher un ancien..." oninput="Alumni.filter()">
+</div>
+<div class="filter-bar">
+<button class="filter-chip active" onclick="Alumni.setFilter('all',this)">Tous</button>
+<button class="filter-chip" onclick="Alumni.setFilter('online',this)">🟢 En ligne</button>
+<button class="filter-chip" onclick="Alumni.setFilter('promo',this)">🎓 Promo récente</button>
+<button class="filter-chip" onclick="Alumni.setFilter('new',this)">🆕 Nouveaux</button>
+<button class="filter-chip" onclick="Alumni.setFilter('memorial',this)">🕊️ Mémoire</button>
+</div>
+<div class="alumni-grid" id="alumniList"></div>
+</div>
+
+<!-- PAGE INFORMATIONS -->
+<div class="page" id="page-info">
+<h2 style="color:var(--gold);margin-bottom:16px">📰 Informations & Actualités</h2>
+<div class="post-creator">
+<div class="post-creator-top">
+<div class="post-avatar" id="postAvatar" style="background:linear-gradient(135deg,var(--gold),var(--purple))">👤</div>
+<textarea class="form-input" id="postText" placeholder="Partagez une information, une annonce, un événement..." rows="3"></textarea>
+</div>
+<div class="post-type-select" style="margin-top:10px">
+<button class="type-btn active" onclick="Feed.setType('info',this)">📢 Information</button>
+<button class="type-btn" onclick="Feed.setType('promotion',this)">🎓 Promotion</button>
+<button class="type-btn" onclick="Feed.setType('naissance',this)">👶 Naissance</button>
+<button class="type-btn" onclick="Feed.setType('deces',this)">🕊️ Décès</button>
+<button class="type-btn" onclick="Feed.setType('evenement',this)">🎉 Événement</button>
+<button class="type-btn" onclick="Feed.setType('emploi',this)">💼 Emploi</button>
+</div>
+<div class="post-creator-actions">
+<input type="file" id="postMedia" accept="image/*,video/*" style="display:none" onchange="Feed.previewMedia(event)">
+<div style="display:flex;gap:8px">
+<button class="btn btn-outline btn-sm" onclick="document.getElementById('postMedia').click()">📷 Média</button>
+<button class="btn btn-outline btn-sm" onclick="Feed.previewVideo()">🎥 Vidéo &lt; 1min</button>
+</div>
+<button class="btn btn-gold" onclick="Feed.publish()">Publier</button>
+</div>
+<div class="post-media-preview" id="postMediaPreview"></div>
+</div>
+<div class="filter-bar">
+<button class="filter-chip active" onclick="Feed.setFilter('all',this)">Tout</button>
+<button class="filter-chip" onclick="Feed.setFilter('info',this)">📢 Infos</button>
+<button class="filter-chip" onclick="Feed.setFilter('promotion',this)">🎓 Promos</button>
+<button class="filter-chip" onclick="Feed.setFilter('naissance',this)">👶 Naissances</button>
+<button class="filter-chip" onclick="Feed.setFilter('deces',this)">🕊️ Décès</button>
+<button class="filter-chip" onclick="Feed.setFilter('evenement',this)">🎉 Événements</button>
+</div>
+<div id="feedList"></div>
+</div>
+
+<!-- PAGE COTISATIONS -->
+<div class="page" id="page-cotisations">
+<h2 style="color:var(--gold);margin-bottom:16px">💰 Cotisations & Contributions</h2>
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+<div class="stat-card">
+<div class="stat-icon">💰</div>
+<div class="stat-number" id="cotiTotal">0</div>
+<div class="stat-label">Total cotisé (FCFA)</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon">✅</div>
+<div class="stat-number" id="cotiPaid">0</div>
+<div class="stat-label">Cotisations payées</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon">⏳</div>
+<div class="stat-number" id="cotiPending">0</div>
+<div class="stat-label">En attente</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">📊 Mes cotisations</div>
+<button class="btn btn-gold btn-sm" onclick="Cotis.showPayModal()">+ Payer une cotisation</button>
+</div>
+<table class="coti-table">
+<thead>
+<tr><th>Événement</th><th>Montant</th><th>Statut</th><th>Date</th><th>Action</th></tr>
+</thead>
+<tbody id="cotiTable"></tbody>
+</table>
+</div>
+
+<div class="card">
+<div class="card-header"><div class="card-title">🏦 Événements en cours</div></div>
+<div id="cotiEvents"></div>
+</div>
+</div>
+
+<!-- PAGE DISCUSSIONS -->
+<div class="page" id="page-discussions">
+<h2 style="color:var(--gold);margin-bottom:16px">💬 Discussions</h2>
+<div class="chat-container">
+<div class="chat-sidebar" id="chatSidebar">
+<div style="padding:12px;border-bottom:1px solid var(--border)">
+<input type="text" class="form-input" placeholder="🔍 Rechercher..." style="padding:8px 14px">
+</div>
+<div id="chatList"></div>
+</div>
+<div class="chat-main">
+<div class="chat-header">
+<div class="chat-item-avatar" id="chatHeaderAvatar" style="background:linear-gradient(135deg,var(--gold),var(--purple))">💬</div>
+<div>
+<div style="font-weight:700" id="chatHeaderName">Discussion générale</div>
+<div style="font-size:.78em;color:var(--text2)" id="chatHeaderStatus">Membres connectés</div>
+</div>
+</div>
+<div class="chat-messages" id="chatMessages"></div>
+<div class="chat-input">
+<input type="text" id="chatInput" placeholder="Écrire un message..." onkeydown="if(event.key==='Enter')Chat.send()">
+<button class="btn btn-gold btn-sm" onclick="Chat.send()">Envoyer</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- PAGE PROFIL -->
+<div class="page" id="page-profile">
+<div class="card" style="text-align:center">
+<div class="welcome-avatar" id="profileAvatar" style="margin:0 auto 12px;width:90px;height:90px;font-size:2.5em">👤</div>
+<h2 id="profileName" style="color:var(--gold)">Ancien</h2>
+<p id="profileDetail" style="color:var(--text2)"></p>
+<div style="display:flex;gap:12px;justify-content:center;margin:16px 0">
+<span class="alumni-badge badge-online">🟢 En ligne</span>
+<span class="alumni-badge badge-promo">🎓 Membre</span>
+</div>
+<button class="btn btn-outline" onclick="Auth.logout()">Se déconnecter</button>
+<button class="btn btn-danger btn-sm" style="margin-top:8px" onclick="Auth.deleteAccount()">Supprimer mon compte</button>
+</div>
+<div class="card">
+<div class="card-title" style="margin-bottom:12px">📋 Mes informations</div>
+<div id="profileInfo"></div>
+</div>
+</div>
+
+</div>
+
+<!-- ═══ MODALS ═══ -->
+<div class="modal-overlay hidden" id="modalOverlay">
+<div class="modal" id="modalContent" style="position:relative">
+<button class="modal-close" onclick="App.closeModal()">✕</button>
+<div id="modalBody"></div>
+</div>
+</div>
+
+<!-- ═══ TOASTS ═══ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// LES ANCIENS — MOTEUR PRINCIPAL
+// ═══════════════════════════════════════════════════════════
+
+// ── DONNÉES SIMULÉES ──
+const DEMO_ALUMNI = [
+{id:1,name:'Moussa Diallo',email:'moussa@email.com',country:'🇸🇳 Sénégal',univ:'Université Cheikh Anta Diop',year:'2018',filiere:'Informatique',status:'online',avatar:'👨🏾‍💼',promo:'Promo 2018',role:'Développeur Senior @ Orange',city:'Dakar',bond:4},
+{id:2,name:'Aminata Traoré',email:'aminata@email.com',country:'🇲🇱 Mali',univ:'Université de Bamako',year:'2016',filiere:'Médecine',status:'online',avatar:'👩🏾‍⚕️',promo:'Promo 2016',role:'Médecin généraliste',city:'Bamako',bond:3},
+{id:3,name:'Ibrahim Njoya',email:'ibrahim@email.com',country:'🇨🇲 Cameroun',univ:'Université de Yaoundé I',year:'2015',filiere:'Droit',status:'offline',avatar:'👨🏾‍⚖️',promo:'Promo 2015',role:'Avocat',city:'Yaoundé',bond:5},
+{id:4,name:'Fatou Sow',email:'fatou@email.com',country:'🇨🇮 Côte d\'Ivoire',univ:'Université Félix Houphouët-Boigny',year:'2020',filiere:'Gestion',status:'online',avatar:'👩🏾‍💼',promo:'Promo 2020',role:'Consultante',city:'Abidjan',bond:2},
+{id:5,name:'Kwame Mensah',email:'kwame@email.com',country:'🇬🇭 Ghana',univ:'University of Ghana',year:'2017',filiere:'Économie',status:'offline',avatar:'👨🏾‍🎓',promo:'Promo 2017',role:'Économiste',city:'Accra',bond:1},
+{id:6,name:'Aïcha Boubacar',email:'aicha@email.com',country:'🇳🇪 Niger',univ:'Université Abdou Moumouni',year:'2019',filiere:'Sciences',status:'online',avatar:'👩🏾‍🔬',promo:'Promo 2019',role:'Ingénieure',city:'Niamey',bond:3},
+{id:7,name:'Paul Mbarga',email:'paul@email.com',country:'🇨🇲 Cameroun',univ:'Université de Ngaoundéré',year:'2014',filiere:'Ingénierie',status:'memorial',avatar:'🕊️',promo:'Promo 2014',role:'In Memoriam',city:'—',bond:5},
+{id:8,name:'Sokhna Diouf',email:'sokhna@email.com',country:'🇸🇳 Sénégal',univ:'ESMT Dakar',year:'2021',filiere:'Management',status:'online',avatar:'👩🏾‍💻',promo:'Promo 2021',role:'Entrepreneure',city:'Dakar',bond:2},
+{id:9,name:'Emmanuel Ndongo',email:'emmanuel@email.com',country:'🇨🇲 Cameroun',univ:'Université de Douala',year:'2012',filiere:'Pharmacie',status:'offline',avatar:'👨🏾‍⚕️',promo:'Promo 2012',role:'Pharmacien',city:'Douala',bond:4},
+{id:10,name:'Léa Mbombo',email:'lea@email.com',country:'🇨🇩 RD Congo',univ:'UNIKIN',year:'2022',filiere:'Lettres',status:'online',avatar:'👩🏾‍🏫',promo:'Promo 2022',role:'Enseignante',city:'Kinshasa',bond:1},
+];
+
+const DEMO_POSTS = [
+{id:1,author:'Moussa Diallo',avatar:'👨🏾‍💼',type:'info',time:'Il y a 2 heures',
+text:'📢 Cher Anciens, nous organisons une réunion de la promotion 2018 le 15 juillet à Dakar. Merci de confirmer votre présence dans les commentaires !',
+likes:24,comments:[{author:'Aminata Traoré',avatar:'👩🏾‍⚕️',text:'Je serai là ! 🎉'}, {author:'Kwame Mensah',avatar:'👨🏾‍🎓',text:'Excellent, hâte de vous revoir !'}]},
+{id:2,author:'Aminata Traoré',avatar:'👩🏾‍⚕️',type:'naissance',time:'Il y a 5 heures',
+text:'👶🎉 Grande nouvelle ! Notre ancien Paul et sa femme viennent d'accueillir un petit garçon. Félicitations à la famille !',
+likes:45,comments:[{author:'Fatou Sow',avatar:'👩🏾‍💼',text:'Toutes nos félicitations ! 👶💕'}, {author:'Ibrahim Njoya',avatar:'👨🏾‍⚖️',text:'Que Dieu le bénisse ! 🤲'}]},
+{id:3,author:'Ibrahim Njoya',avatar:'👨🏾‍⚖️',type:'deces',time:'Il y a 1 jour',
+text:'🕊️ C\'est avec une grande tristesse que nous apprenons le décès de notre ami Paul Mbarga (Promo 2014). Nos pensées vont à sa famille. Repose en paix, frère. 🕊️',
+likes:67,comments:[{author:'Aïcha Boubacar',avatar:'👩🏾‍🔬',text:'Que son âme repose en paix 🙏'}, {author:'Emmanuel Ndongo',avatar:'👨🏾‍⚕️',text:'Un grand homme nous quitte. Courage à sa famille.'}]},
+{id:4,author:'Fatou Sow',avatar:'👩🏾‍💼',type:'emploi',time:'Il y a 2 jours',
+text:'💼 Offre d\'emploi : Notre entreprise cherche un Développeur Full Stack (React/Node). Lieu : Abidjan. Salaire attractif. MP pour plus d\'infos !',
+likes:18,comments:[{author:'Moussa Diallo',avatar:'👨🏾‍💼',text:'Intéressé ! Je t\'écris en privé.'}]},
+{id:5,author:'Aïcha Boubacar',avatar:'👩🏾‍🔬',type:'evenement',time:'Il y a 3 jours',
+text:'🎉 Invitation : Galas des Anciens 2025 — Samedi 20 décembre à l\'Hôtel Hilton de Yaoundé. Code vestimentaire : Tenue de soirée. Réservez vos places !',
+likes:52,comments:[{author:'Sokhna Diouf',avatar:'👩🏾‍💻',text:'Inscrite ! 🌟'}, {author:'Léa Mbombo',avatar:'👩🏾‍🏫',text:'J\'espère être là ! 🎊'}]}
+];
+
+const DEMO_COTISATIONS = [
+{id:1,event:'Gala 2025',amount:25000,status:'paid',date:'2025-01-15'},
+{id:2,event:'Fonds solidarité',amount:10000,status:'paid',date:'2024-11-01'},
+{id:3,event:'Réunion Promo 2018',amount:5000,status:'pending',date:'2025-03-01'},
+{id:4,event:'Assurance collective',amount:15000,status:'overdue',date:'2024-06-01'},
+{id:5,event:'Fonds bourse',amount:20000,status:'paid',date:'2024-09-15'}
+];
+
+const DEMO_EVENTS = [
+{id:1,name:'Gala des Anciens 2025',date:'20 Déc 2025',target:5000000,collected:3200000,participants:89},
+{id:2,name:'Fonds de solidarité',date:'Permanent',target:10000000,collected:6800000,participants:156},
+{id:3,name:'Assurance collective',date:'Annuel',target:3000000,collected:1200000,participants:67}
+];
+
+const DEMO_MESSAGES = [
+{id:1,name:'Discussion générale',avatar:'💬',messages:[
+{sender:'Moussa Diallo',avatar:'👨🏾‍💼',text:'Bonjour à tous les Anciens ! 👋',time:'10:30',sent:false},
+{sender:'Aminata Traoré',avatar:'👩🏾‍⚕️',text:'Salut Moussa ! Comment ça va ?',time:'10:32',sent:false},
+{sender:'Vous',avatar:'👤',text:'Bonjour tout le monde ! Ravi d\'être parmi vous.',time:'10:35',sent:true},
+{sender:'Fatou Sow',avatar:'👩🏾‍💼',text:'On se voit au Gala ? 🎉',time:'10:40',sent:false},
+{sender:'Vous',avatar:'👤',text:'Bien sûr ! J\'ai déjà payé ma cotisation.',time:'10:42',sent:true}
+]},
+{id:2,name:'Promo 2018',avatar:'🎓',messages:[
+{sender:'Moussa Diallo',avatar:'👨🏾‍💼',text:'La réunion est confirmée pour le 15 juillet !',time:'09:00',sent:false},
+{sender:'Vous',avatar:'👤',text:'Super nouvelle ! 🎉',time:'09:05',sent:true}
+]},
+{id:3,name:'Solidarité',avatar:'🤝',messages:[
+{sender:'Ibrahim Njoya',avatar:'👨🏾‍⚖️',text:'Merci à tous pour votre soutien à la famille Mbarga.',time:'Hier',sent:false},
+{sender:'Vous',avatar:'👤',text:'C\'est normal, c\'est notre famille.',time:'Hier',sent:true}
+]}
+];
+
+
+// ═══════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════
+
+const Auth = {
+currentUser: null,
+
+switchTab(tab) {
+document.querySelectorAll('.auth-tab').forEach((t,i) => {
+t.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1));
+});
+document.getElementById('loginForm').style.display = tab==='login' ? 'block' : 'none';
+document.getElementById('registerForm').style.display = tab==='register' ? 'block' : 'none';
+},
+
+login() {
+const email = document.getElementById('loginEmail').value.trim();
+const pass = document.getElementById('loginPass').value;
+if (!email || !pass) return App.toast('Veuillez remplir tous les champs','error');
+
+// Check localStorage users
+const users = JSON.parse(localStorage.getItem('anciens_users') || '[]');
+const user = users.find(u => u.email === email && u.password === pass);
+if (user) {
+this.currentUser = user;
+this.enter();
+} else {
+App.toast('Email ou mot de passe incorrect','error');
+}
+},
+
+register() {
+const name = document.getElementById('regName').value.trim();
+const email = document.getElementById('regEmail').value.trim();
+const pass = document.getElementById('regPass').value;
+const country = document.getElementById('regCountry').value;
+const univ = document.getElementById('regUniv').value.trim();
+const year = document.getElementById('regYear').value;
+const filiere = document.getElementById('regFiliere').value;
+
+if (!name || !email || !pass || !country || !univ) return App.toast('Veuillez remplir tous les champs obligatoires','error');
+if (pass.length < 6) return App.toast('Mot de passe trop court (6 caractères min)','error');
+
+const users = JSON.parse(localStorage.getItem('anciens_users') || '[]');
+if (users.find(u => u.email === email)) return App.toast('Cet email est déjà utilisé','error');
+
+const user = {
+id: Date.now(), name, email, password: pass,
+country, univ, year: year || '2024', filiere: filiere || 'Autre',
+avatar: '👤', role: 'Ancien étudiant', city: '', bond: 0,
+status: 'online', promo: `Promo ${year||'2024'}`
+};
+users.push(user);
+localStorage.setItem('anciens_users', JSON.stringify(users));
+
+this.currentUser = user;
+this.enter();
+App.toast('Inscription réussie ! Bienvenue 🎉','success');
+},
+
+demo() {
+this.currentUser = {
+id: 0, name: 'Amadou Kaboré', email: 'demo@anciens.com',
+country: '🇨🇲 Cameroun', univ: 'Université de Yaoundé I',
+year: '2018', filiere: 'Informatique',
+avatar: '👨🏾‍💻', role: 'Développeur', city: 'Yaoundé',
+bond: 4, status: 'online', promo: 'Promo 2018'
+};
+this.enter();
+App.toast('Mode démo activé 🎮','info');
+},
+
+enter() {
+document.getElementById('authScreen').classList.add('hidden');
+document.getElementById('navbar').style.display = 'flex';
+document.getElementById('mainContent').style.display = 'block';
+localStorage.setItem('anciens_session', JSON.stringify(this.currentUser));
+App.init();
+},
+
+logout() {
+localStorage.removeItem('anciens_session');
+this.currentUser = null;
+document.getElementById('authScreen').classList.remove('hidden');
+document.getElementById('navbar').style.display = 'none';
+document.getElementById('mainContent').style.display = 'none';
+App.toast('Déconnexion réussie','info');
+},
+
+deleteAccount() {
+if (!confirm('Supprimer définitivement votre compte ?')) return;
+const users = JSON.parse(localStorage.getItem('anciens_users') || '[]');
+const idx = users.findIndex(u => u.email === this.currentUser?.email);
+if (idx >= 0) users.splice(idx, 1);
+localStorage.setItem('anciens_users', JSON.stringify(users));
+this.logout();
+},
+
+restore() {
+const session = localStorage.getItem('anciens_session');
+if (session) {
+this.currentUser = JSON.parse(session);
+this.enter();
+}
+}
+};
+
+
+// ═══════════════════════════════════════════════════════════
+// APP PRINCIPAL
+// ═══════════════════════════════════════════════════════════
+
+const App = {
+currentPage: 'dashboard',
+
+init() {
+const u = Auth.currentUser;
+// Dashboard
+document.getElementById('dashAvatar').textContent = u?.avatar || '👤';
+document.getElementById('dashName').textContent = u?.name || 'Ancien';
+document.getElementById('dashSubtitle').textContent = `${u?.univ || ''} — ${u?.promo || ''}`;
+document.getElementById('navAvatar').textContent = u?.avatar || '👤';
+document.getElementById('postAvatar').textContent = u?.avatar || '👤';
+
+this.renderDashboard();
+Alumni.render();
+Feed.render();
+Cotis.render();
+Chat.render();
+
+// Profile
+document.getElementById('profileAvatar').textContent = u?.avatar || '👤';
+document.getElementById('profileName').textContent = u?.name || 'Ancien';
+document.getElementById('profileDetail').textContent = `${u?.univ || ''} — ${u?.country || ''} — ${u?.promo || ''}`;
+document.getElementById('profileInfo').innerHTML = `
+<div class="form-row">
+<div><b>Nom:</b> ${u?.name || '—'}</div>
+<div><b>Email:</b> ${u?.email || '—'}</div>
+</div>
+<div class="form-row" style="margin-top:8px">
+<div><b>Université:</b> ${u?.univ || '—'}</div>
+<div><b>Pays:</b> ${u?.country || '—'}</div>
+</div>
+<div class="form-row" style="margin-top:8px">
+<div><b>Promotion:</b> ${u?.promo || '—'}</div>
+<div><b>Filière:</b> ${u?.filiere || '—'}</div>
+</div>
+<div class="form-row" style="margin-top:8px">
+<div><b>Rôle:</b> ${u?.role || '—'}</div>
+<div><b>Ville:</b> ${u?.city || '—'}</div>
+</div>
+`;
+},
+
+nav(page) {
+this.currentPage = page;
+document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+const el = document.getElementById('page-' + page);
+if (el) el.classList.add('active');
+document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+const link = document.querySelector(`.nav-link[data-page="${page}"]`);
+if (link) link.classList.add('active');
+document.getElementById('navLinks').classList.remove('open');
+window.scrollTo(0, 0);
+},
+
+toggleMenu() {
+document.getElementById('navLinks').classList.toggle('open');
+},
+
+showNotifications() {
+this.showModal(`
+<div class="modal-title">🔔 Notifications</div>
+<div style="margin-bottom:12px;padding:12px;background:var(--bg3);border-radius:var(--radius)">
+<b style="color:var(--gold)">📢 Nouvelle information</b>
+<p style="font-size:.9em;color:var(--text2)">Moussa a publié une annonce pour la Promo 2018</p>
+</div>
+<div style="margin-bottom:12px;padding:12px;background:var(--bg3);border-radius:var(--radius)">
+<b style="color:var(--green)">👶 Naissance</b>
+<p style="font-size:.9em;color:var(--text2)">Félicitations à Paul et sa famille !</p>
+</div>
+<div style="padding:12px;background:var(--bg3);border-radius:var(--radius)">
+<b style="color:var(--gold)">💰 Cotisation</b>
+<p style="font-size:.9em;color:var(--text2)">Rappel : cotisation Gala 2025 à régler</p>
+</div>
+`);
+},
+
+showModal(html) {
+document.getElementById('modalBody').innerHTML = html;
+document.getElementById('modalOverlay').classList.remove('hidden');
+},
+
+closeModal() {
+document.getElementById('modalOverlay').classList.add('hidden');
+},
+
+toast(msg, type='info') {
+const container = document.getElementById('toastContainer');
+const toast = document.createElement('div');
+toast.className = `toast ${type}`;
+const icons = { success:'✅', error:'❌', info:'ℹ️' };
+toast.innerHTML = `<span style="font-size:1.2em">${icons[type]||'ℹ️'}</span> ${msg}`;
+container.appendChild(toast);
+setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(30px)'; setTimeout(() => toast.remove(), 300); }, 3500);
+},
+
+renderDashboard() {
+// Stats
+document.getElementById('statAlumni').textContent = DEMO_ALUMNI.length + 1;
+document.getElementById('statPosts').textContent = DEMO_POSTS.length;
+document.getElementById('statCoti').textContent = DEMO_COTISATIONS.filter(c => c.status==='paid').length;
+document.getElementById('statMessages').textContent = DEMO_MESSAGES.reduce((s,m) => s + m.messages.length, 0);
+
+// Latest news
+document.getElementById('dashNews').innerHTML = DEMO_POSTS.slice(0, 3).map(p => `
+<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+<div class="post-avatar" style="width:36px;height:36px;font-size:.9em;background:var(--bg3)">${p.avatar}</div>
+<div style="flex:1">
+<div style="font-size:.92em"><b style="color:var(--gold)">${p.author}</b> — ${p.text.substring(0, 100)}...</div>
+<div style="font-size:.78em;color:var(--text3)">${p.time}</div>
+</div>
+</div>
+`).join('');
+
+// New members
+document.getElementById('dashNewMembers').innerHTML = DEMO_ALUMNI.slice(0, 4).map(a => `
+<div class="alumni-card" style="padding:12px">
+<div class="alumni-avatar" style="width:40px;height:40px;font-size:1.1em;background:var(--bg3)">${a.avatar}</div>
+<div class="alumni-info">
+<div class="alumni-name" style="font-size:.9em">${a.name}</div>
+<div class="alumni-detail">${a.promo}</div>
+</div>
+</div>
+`).join('');
+}
+};
+
+
+// ═══════════════════════════════════════════════════════════
+// ALUMNI
+// ═══════════════════════════════════════════════════════════
+
+const Alumni = {
+filterType: 'all',
+
+setFilter(type, el) {
+this.filterType = type;
+document.querySelectorAll('#page-alumni .filter-chip').forEach(c => c.classList.remove('active'));
+if (el) el.classList.add('active');
+this.render();
+},
+
+filter() { this.render(); },
+
+render() {
+const search = document.getElementById('alumniSearch')?.value?.toLowerCase() || '';
+let list = [...DEMO_ALUMNI];
+
+// Filter
+if (this.filterType === 'online') list = list.filter(a => a.status === 'online');
+if (this.filterType === 'new') list = list.filter(a => parseInt(a.year) >= 2020);
+if (this.filterType === 'promo') list = list.filter(a => parseInt(a.year) >= 2018);
+if (this.filterType === 'memorial') list = list.filter(a => a.status === 'memorial');
+
+// Search
+if (search) {
+list = list.filter(a =>
+a.name.toLowerCase().includes(search) ||
+a.univ.toLowerCase().includes(search) ||
+a.country.toLowerCase().includes(search) ||
+a.filiere.toLowerCase().includes(search)
+);
+}
+
+const container = document.getElementById('alumniList');
+if (!container) return;
+
+container.innerHTML = list.map(a => `
+<div class="alumni-card" onclick="Alumni.showProfile(${a.id})">
+<div class="alumni-avatar" style="background:linear-gradient(135deg,var(--bg4),var(--bg3))">${a.avatar}</div>
+<div class="alumni-info">
+<div class="alumni-name">${a.name}</div>
+<div class="alumni-detail">🎓 ${a.univ}</div>
+<div class="alumni-detail">📍 ${a.country} — ${a.city}</div>
+<div class="alumni-detail">💼 ${a.role}</div>
+<div style="margin-top:6px">
+<span class="alumni-badge ${a.status==='online'?'badge-online':a.status==='memorial'?'badge-memorial':'badge-offline'}">
+${a.status==='online'?'🟢 En ligne':a.status==='memorial'?'🕊️ Mémoire':'⚪ Hors ligne'}
+</span>
+<span class="alumni-badge badge-promo">${a.promo}</span>
+</div>
+<div style="margin-top:4px;font-size:.78em;color:var(--text3)">💕 Amitié: ${'❤'.repeat(a.bond)}${'♡'.repeat(5-a.bond)}</div>
+</div>
+</div>
+`).join('') || '<div style="text-align:center;color:var(--text2);padding:40px">Aucun ancien trouvé.</div>';
+},
+
+showProfile(id) {
+const a = DEMO_ALUMNI.find(x => x.id === id);
+if (!a) return;
+App.showModal(`
+<div style="text-align:center">
+<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--purple));margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:2.5em">${a.avatar}</div>
+<h2 style="color:var(--gold)">${a.name}</h2>
+<p style="color:var(--text2)">${a.role} — ${a.city}</p>
+<div style="display:flex;gap:8px;justify-content:center;margin:12px 0">
+<span class="alumni-badge badge-promo">${a.promo}</span>
+<span class="alumni-badge ${a.status==='online'?'badge-online':'badge-offline'}">${a.status==='online'?'🟢 En ligne':'⚪ Hors ligne'}</span>
+</div>
+</div>
+<hr style="border-color:var(--border);margin:16px 0">
+<div style="font-size:.92em;line-height:2">
+<b>🎓 Université:</b> ${a.univ}<br>
+<b>📚 Filière:</b> ${a.filiere}<br>
+<b>🌍 Pays:</b> ${a.country}<br>
+<b>💼 Profession:</b> ${a.role}<br>
+<b>💕 Niveau d'amitié:</b> ${'❤'.repeat(a.bond)}${'♡'.repeat(5-a.bond)}
+</div>
+<div style="margin-top:16px;display:flex;gap:8px;justify-content:center">
+<button class="btn btn-gold btn-sm" onclick="App.toast('Message envoyé à ${a.name} !','success');App.closeModal()">💬 Envoyer un message</button>
+<button class="btn btn-outline btn-sm" onclick="App.toast('Profil partagé !','success');App.closeModal()">🔗 Partager</button>
+</div>
+`);
+}
+};
+
+
+// ═══════════════════════════════════════════════════════════
+// FEED / POSTS
+// ═══════════════════════════════════════════════════════════
+
+const Feed = {
+postType: 'info',
+filterType: 'all',
+mediaData: null,
+
+setType(type, el) {
+this.postType = type;
+document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+if (el) el.classList.add('active');
+},
+
+setFilter(type, el) {
+this.filterType = type;
+document.querySelectorAll('#page-info .filter-chip').forEach(c => c.classList.remove('active'));
+if (el) el.classList.add('active');
+this.render();
+},
+
+previewMedia(e) {
+const file = e.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = ev => {
+this.mediaData = ev.target.result;
+const preview = document.getElementById('postMediaPreview');
+preview.style.display = 'block';
+preview.innerHTML = file.type.startsWith('video') ?
+`<video src="${ev.target.result}" style="width:100%;max-height:200px;object-fit:cover;border-radius:var(--radius)" controls></video>` :
+`<img src="${ev.target.result}" style="width:100%;max-height:200px;object-fit:cover;border-radius:var(--radius)">`;
+};
+reader.readAsDataURL(file);
+},
+
+previewVideo() {
+document.getElementById('postMedia').accept = 'video/*';
+document.getElementById('postMedia').click();
+App.toast('Vidéo courte (< 1 min) recommandée','info');
+},
+
+publish() {
+const text = document.getElementById('postText').value.trim();
+if (!text && !this.mediaData) return App.toast('Écrivez quelque part ou ajoutez un média','error');
+
+const u = Auth.currentUser;
+const newPost = {
+id: Date.now(),
+author: u?.name || 'Vous',
+avatar: u?.avatar || '👤',
+type: this.postType,
+time: 'À l\'instant',
+text: text || '(Média partagé)',
+media: this.mediaData,
+likes: 0,
+comments: []
+};
+
+DEMO_POSTS.unshift(newPost);
+document.getElementById('postText').value = '';
+document.getElementById('postMediaPreview').style.display = 'none';
+document.getElementById('postMedia').value = '';
+this.mediaData = null;
+
+this.render();
+App.toast('Publication envoyée ! 🎉','success');
+},
+
+render() {
+const container = document.getElementById('feedList');
+if (!container) return;
+
+let posts = [...DEMO_POSTS];
+if (this.filterType !== 'all') posts = posts.filter(p => p.type === this.filterType);
+
+const typeLabels = {
+info: '<span class="post-type" style="background:rgba(52,152,219,.15);color:#3498db">📢 Info</span>',
+promotion: '<span class="post-type" style="background:rgba(212,168,67,.15);color:var(--gold)">🎓 Promotion</span>',
+naissance: '<span class="post-type" style="background:rgba(46,204,113,.15);color:var(--green)">👶 Naissance</span>',
+deces: '<span class="post-type" style="background:rgba(231,76,60,.15);color:var(--red)">🕊️ Décès</span>',
+evenement: '<span class="post-type" style="background:rgba(155,89,182,.15);color:var(--purple)">🎉 Événement</span>',
+emploi: '<span class="post-type" style="background:rgba(241,196,15,.15);color:#f1c40f">💼 Emploi</span>'
+};
+
+container.innerHTML = posts.map(p => `
+<div class="post-card" id="post-${p.id}">
+<div class="post-header">
+<div class="post-avatar" style="background:var(--bg3)">${p.avatar}</div>
+<div class="post-meta">
+<div class="post-author">${p.author} ${typeLabels[p.type] || ''}</div>
+<div class="post-time">${p.time}</div>
+</div>
+</div>
+<div class="post-body">${p.text}</div>
+${p.media ? `<div class="post-media">${p.media.startsWith('data:video') ? `<video src="${p.media}" controls style="width:100%;max-height:350px"></video>` : `<img src="${p.media}">`}</div>` : ''}
+<div class="post-actions">
+<button class="post-action ${p.liked ? 'liked' : ''}" onclick="Feed.like(${p.id})">❤️ ${p.likes || 0}</button>
+<button class="post-action" onclick="Feed.toggleComments(${p.id})">💬 ${p.comments?.length || 0} commentaires</button>
+<button class="post-action" onclick="App.toast('Lien copié !','success')">🔗 Partager</button>
+</div>
+<div class="comment-section" id="comments-${p.id}" style="display:${p.showComments ? 'block' : 'none'}">
+${(p.comments || []).map(c => `
+<div class="comment">
+<div class="comment-avatar" style="background:var(--bg3)">${c.avatar || '👤'}</div>
+<div class="comment-body">
+<div class="comment-author">${c.author}</div>
+<div class="comment-text">${c.text}</div>
+</div>
+</div>
+`).join('')}
+<div class="comment-input">
+<input type="text" placeholder="Ajouter un commentaire..." id="commentInput-${p.id}"
+onkeydown="if(event.key==='Enter')Feed.addComment(${p.id})">
+<button class="btn btn-gold btn-sm" onclick="Feed.addComment(${p.id})">Envoyer</button>
+</div>
+</div>
+</div>
+`).join('') || '<div style="text-align:center;color:var(--text2);padding:40px">Aucune publication.</div>';
+},
+
+like(id) {
+const post = DEMO_POSTS.find(p => p.id === id);
+if (!post) return;
+post.liked = !post.liked;
+post.likes = (post.likes || 0) + (post.liked ? 1 : -1);
+this.render();
+},
+
+toggleComments(id) {
+const post = DEMO_POSTS.find(p => p.id === id);
+if (!post) return;
+post.showComments = !post.showComments;
+this.render();
+if (post.showComments) {
+const input = document.getElementById(`commentInput-${id}`);
+if (input) input.focus();
+}
+},
+
+addComment(id) {
+const input = document.getElementById(`commentInput-${id}`);
+if (!input || !input.value.trim()) return;
+const post = DEMO_POSTS.find(p => p.id === id);
+if (!post) return;
+if (!post.comments) post.comments = [];
+const u = Auth.currentUser;
+post.comments.push({
+author: u?.name || 'Vous',
+avatar: u?.avatar || '👤',
+text: input.value.trim()
+});
+input.value = '';
+this.render();
+}
+};
+
+
+// ═══════════════════════════════════════════════════════════
+// COTISATIONS
+// ═══════════════════════════════════════════════════════════
+
+const Cotis = {
+render() {
+const paid = DEMO_COTISATIONS.filter(c => c.status === 'paid');
+const pending = DEMO_COTISATIONS.filter(c => c.status === 'pending');
+const total = paid.reduce((s, c) => s + c.amount, 0);
+
+document.getElementById('cotiTotal').textContent = total.toLocaleString();
+document.getElementById('cotiPaid').textContent = paid.length;
+document.getElementById('cotiPending').textContent = pending.length;
+
+const statusLabels = {
+paid: '<span class="status-paid">✅ Payé</span>',
+pending: '<span class="status-pending">⏳ En attente</span>',
+overdue: '<span class="status-overdue">🔴 En retard</span>'
+};
+
+document.getElementById('cotiTable').innerHTML = DEMO_COTISATIONS.map(c => `
+<tr>
+<td><b>${c.event}</b></td>
+<td>${c.amount.toLocaleString()} FCFA</td>
+<td>${statusLabels[c.status]}</td>
+<td>${c.date}</td>
+<td>${c.status !== 'paid' ? `<button class="btn btn-gold btn-sm" onclick="Cotis.pay(${c.id})">Payer</button>` : '<span style="color:var(--text3)">—</span>'}</td>
+</tr>
+`).join('');
+
+document.getElementById('cotiEvents').innerHTML = DEMO_EVENTS.map(e => {
+const pct = Math.min(100, Math.round(e.collected / e.target * 100));
+return `
+<div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);margin:8px 0">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<b style="color:var(--gold)">${e.name}</b>
+<span style="font-size:.82em;color:var(--text2)">${e.date}</span>
+</div>
+<div style="margin:8px 0">
+<div style="display:flex;justify-content:space-between;font-size:.82em;color:var(--text2)">
+<span>${e.collected.toLocaleString()} / ${e.target.toLocaleString()} FCFA</span>
+<span>${pct}%</span>
+</div>
+<div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:4px">
+<div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--gold),var(--accent2));border-radius:4px;transition:width .5s"></div>
+</div>
+</div>
+<div style="font-size:.82em;color:var(--text2)">${e.participants} participants</div>
+</div>
+`;
+}).join('');
+},
+
+showPayModal() {
+App.showModal(`
+<div class="modal-title">💳 Payer une cotisation</div>
+<div class="form-group">
+<label class="form-label">Événement</label>
+<select class="form-select" id="payEvent">
+${DEMO_EVENTS.map(e => `<option>${e.name}</option>`).join('')}
+</select>
+</div>
+<div class="form-group">
+<label class="form-label">Montant (FCFA)</label>
+<input type="number" class="form-input" id="payAmount" placeholder="Ex: 10000" value="10000">
+</div>
+<div class="form-group">
+<label class="form-label">Moyen de paiement</label>
+<select class="form-select" id="payMethod">
+<option>📱 MTN Mobile Money</option>
+<option>📱 Orange Money</option>
+<option>💳 Carte bancaire</option>
+<option>🏦 Virement bancaire</option>
+</select>
+</div>
+<div class="form-group">
+<label class="form-label">Numéro / Référence</label>
+<input type="text" class="form-input" id="payRef" placeholder="6XX XXX XXX">
+</div>
+<button class="btn btn-gold" style="width:100%" onclick="Cotis.processPay()">✅ Confirmer le paiement</button>
+`);
+},
+
+processPay() {
+const amount = document.getElementById('payAmount')?.value;
+if (!amount) return App.toast('Entrez un montant','error');
+App.closeModal();
+App.toast(`Paiement de ${parseInt(amount).toLocaleString()} FCFA confirmé ! ✅`, 'success');
+const newCoti = {
+id: Date.now(),
+event: document.getElementById('payEvent')?.value || 'Événement',
+amount: parseInt(amount),
+status: 'paid',
+date: new Date().toISOString().split('T')[0]
+};
+DEMO_COTISATIONS.unshift(newCoti);
+this.render();
+},
+
+pay(id) {
+const c = DEMO_COTISATIONS.find(x => x.id === id);
+if (c) {
+c.status = 'paid';
+c.date = new Date().toISOString().split('T')[0];
+App.toast('Cotisation payée ! ✅','success');
+this.render();
+}
+}
+};
+
+
+// ═══════════════════════════════════════════════════════════
+// DISCUSSIONS
+// ═══════════════════════════════════════════════════════════
+
+const Chat = {
+activeChat: 0,
+
+render() {
+// Sidebar
+document.getElementById('chatList').innerHTML = DEMO_MESSAGES.map((c, i) => `
+<div class="chat-item ${i === this.activeChat ? 'active' : ''}" onclick="Chat.select(${i})">
+<div class="chat-item-avatar" style="background:var(--bg3)">${c.avatar}</div>
+<div class="chat-item-info">
+<div class="chat-item-name">${c.name}</div>
+<div class="chat-item-preview">${c.messages[c.messages.length - 1]?.text || ''}</div>
+</div>
+<div class="chat-item-time">${c.messages[c.messages.length - 1]?.time || ''}</div>
+</div>
+`).join('');
+
+this.renderMessages();
+},
+
+select(idx) {
+this.activeChat = idx;
+document.querySelectorAll('.chat-item').forEach((c, i) => c.classList.toggle('active', i === idx));
+this.renderMessages();
+},
+
+renderMessages() {
+const chat = DEMO_MESSAGES[this.activeChat];
+if (!chat) return;
+
+document.getElementById('chatHeaderName').textContent = chat.name;
+document.getElementById('chatHeaderAvatar').textContent = chat.avatar;
+document.getElementById('chatHeaderStatus').textContent = `${chat.messages.length} messages`;
+
+document.getElementById('chatMessages').innerHTML = chat.messages.map(m => `
+<div class="msg ${m.sent ? 'sent' : 'received'}">
+<div class="msg-avatar" style="background:var(--bg3)">${m.avatar}</div>
+<div>
+<div class="msg-bubble">
+${!m.sent ? `<div style="font-size:.78em;font-weight:700;color:var(--gold);margin-bottom:2px">${m.sender}</div>` : ''}
+${m.text}
+</div>
+<div class="msg-time">${m.time}</div>
+</div>
+</div>
+`).join('');
+
+// Scroll to bottom
+const messagesEl = document.getElementById('chatMessages');
+messagesEl.scrollTop = messagesEl.scrollHeight;
+},
+
+send() {
+const input = document.getElementById('chatInput');
+const text = input.value.trim();
+if (!text) return;
+
+const chat = DEMO_MESSAGES[this.activeChat];
+chat.messages.push({
+sender: 'Vous',
+avatar: Auth.currentUser?.avatar || '👤',
+text,
+time: new Date().toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' }),
+sent: true
+});
+
+input.value = '';
+this.renderMessages();
+}
+};
+
+
+// ═══════════════════════════════════════════════════════════
+// DÉMARRAGE
+// ═══════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+Auth.restore();
+});
+</script>
+</body>
+</html>
+```
+
+---
+
+## 📋 Ce que l'Application Contient
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  ✅ MODULES COMPLETS                                         │
+│                                                              │
+│  🔐 AUTHENTIFICATION                                         │
+│  ├── Inscription (nom, email, pays, université, promo)       │
+│  ├── Connexion                                               │
+│  ├── Mode démo instantané                                    │
+│  ├── Sauvegarde localStorage                                 │
+│  └── Suppression de compte                                   │
+│                                                              │
+│  📊 TABLEAU DE BORD                                          │
+│  ├── Message de bienvenue personnalisé                       │
+│  ├── 4 statistiques (anciens, posts, cotis, messages)        │
+│  ├── Dernières informations                                  │
+│  └── Nouveaux membres                                        │
+│                                                              │
+│  👥 LISTE DES ANCIENS                                        │
+│  ├── Recherche (nom, université, pays, filière)              │
+│  ├── Filtres (Tous, En ligne, Promo, Nouveaux, Mémoire)     │
+│  ├── Cartes profil avec avatar, statut, amitié               │
+│  └── Modal de profil détaillé (message, partager)            │
+│                                                              │
+│  📰 INFORMATIONS (Feed social)                               │
+│  ├── Création de post (texte + image + vidéo < 1min)         │
+│  ├── 6 types de post : Info, Promotion, Naissance,           │
+│  │   Décès, Événement, Emploi                               │
+│  ├── Likes ❤️ et commentaires                                │
+│  ├── Partage de médias                                       │
+│  └── Filtres par type                                        │
+│                                                              │
+│  💰 COTISATIONS                                              │
+│  ├── Tableau des cotisations (payé, en attente, en retard)   │
+│  ├── Événements avec barres de progression                   │
+│  ├── Modal de paiement (MTN MoMo, Orange Money, CB, Virement)│
+│  └── Statistiques financières                                │
+│                                                              │
+│  💬 DISCUSSIONS                                              │
+│  ├── 3 conversations (Général, Promo, Solidarité)            │
+│  ├── Chat en temps réel simulé                               │
+│  ├── Messages envoyés/reçus avec horodatage                  │
+│  └── Sidebar de navigation                                   │
+│                                                              │
+│  🎨 DESIGN                                                   │
+│  ├── Thème sombre avec accents dorés                         │
+│  ├── Responsive (desktop + mobile)                           │
+│  ├── Animations fluides                                      │
+│  ├── Toasts de notification                                  │
+│  └── Modals interactifs                                      │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+Ouvrez le fichier `.html` dans un navigateur et cliquez sur **"🎮 Mode démo"** pour tester immédiatement. 🎓✨

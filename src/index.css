@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+:root {
+  --app-accent: #d4a843;
+  --app-accent-light: #f0c75e;
+  --app-accent-highlight: #f5d76e;
+  --app-accent-rgb: 212, 168, 67;
+  --app-accent-contrast: #111111;
+}
+
+@theme inline {
+  --color-accent: var(--app-accent);
+  --color-accent-light: var(--app-accent-light);
+  --color-accent-highlight: var(--app-accent-highlight);
+  --color-accent-contrast: var(--app-accent-contrast);
+}
+
+@layer base {
+  body {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    background-color: #0f1117;
+    color: #e8e0d0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn,
+  .animate-slideIn {
+    animation: none;
+  }
+}
+
+/* Custom discreet scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--app-accent-rgb), 0.24);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--app-accent-rgb), 0.48);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--app-accent-rgb), 0.24) transparent;
+}

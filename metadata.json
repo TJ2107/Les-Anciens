@@ -1,0 +1,6 @@
+{
+  "name": "Les Anciens",
+  "description": "Réseau des anciens étudiants du monde entier",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
