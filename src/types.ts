@@ -2,6 +2,7 @@ export type PageId =
   | 'dashboard'
   | 'alumni'
   | 'info'
+  | 'sondages'
   | 'cotisations'
   | 'discussions'
   | 'profile'
@@ -79,6 +80,17 @@ export interface Cotisation {
   confirmedAt?: string;
 }
 
+export type EventRsvpStatus = 'going' | 'maybe' | 'not_going';
+
+export interface EventRsvp {
+  alumnusName: string;
+  alumnusEmail: string;
+  avatar: string;
+  promo?: string;
+  status: EventRsvpStatus;
+  updatedAt: string;
+}
+
 export interface EventFund {
   id: number;
   name: string;
@@ -87,6 +99,27 @@ export interface EventFund {
   target: number;
   collected: number;
   participants: number;
+  rsvps?: EventRsvp[];
+}
+
+export interface PollOption {
+  id: string;
+  label: string;
+  voterEmails: string[];
+}
+
+export interface Poll {
+  id: number;
+  question: string;
+  description?: string;
+  options: PollOption[];
+  allowMultiple?: boolean;
+  createdBy: string;
+  createdByEmail: string;
+  createdByAvatar: string;
+  createdAt: string;
+  deadline?: string;
+  closed?: boolean;
 }
 
 export interface ChatMessage {
@@ -116,7 +149,7 @@ export interface ToastItem {
   type: 'success' | 'error' | 'info';
 }
 
-export type NotificationCategory = 'cotisation' | 'info' | 'discussion' | 'system';
+export type NotificationCategory = 'cotisation' | 'info' | 'poll' | 'discussion' | 'system';
 
 export interface AppNotification {
   id: number;

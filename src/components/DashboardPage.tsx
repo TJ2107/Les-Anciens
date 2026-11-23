@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   ArrowRight,
+  BarChart3,
   Camera,
   CreditCard,
   Heart,
@@ -14,18 +15,22 @@ import {
   Alumnus,
   Cotisation,
   EventFund,
+  EventRsvpStatus,
   GalleryCategory,
   GalleryPhoto,
   PageId,
+  Poll,
   Post,
   UserProfile,
 } from '../types';
 import { AvatarDisplay } from './AvatarDisplay';
+import { EventRsvpControls } from './EventRsvpControls';
 
 interface DashboardPageProps {
   user: UserProfile;
   alumniList: Alumnus[];
   posts: Post[];
+  polls: Poll[];
   cotisations: Cotisation[];
   eventFunds: EventFund[];
   galleryPhotos: GalleryPhoto[];
@@ -40,6 +45,8 @@ interface DashboardPageProps {
   onOpenCreateEvent: () => void;
   onEditEvent: (event: EventFund) => void;
   onRequestDeleteEvent: (event: EventFund) => void;
+  onRsvpEvent: (eventId: number, status: EventRsvpStatus) => void;
+  onOpenEventParticipants: (event: EventFund) => void;
 }
 
 const GALLERY_FILTERS: { id: 'all' | GalleryCategory; label: string }[] = [
@@ -54,6 +61,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   user,
   alumniList,
   posts,
+  polls,
   cotisations,
   eventFunds,
   galleryPhotos,
@@ -68,6 +76,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onOpenCreateEvent,
   onEditEvent,
   onRequestDeleteEvent,
+  onRsvpEvent,
+  onOpenEventParticipants,
 }) => {
   const [galleryFilter, setGalleryFilter] = useState<'all' | GalleryCategory>('all');
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
@@ -222,6 +232,61 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
         </section>
       </div>
+
+      {/* Sondages communautaires en cours */}
+      <section className="bg-[#1a1d2e] border border-accent/16 rounded-3xl p-5 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <h2 className="text-base sm:text-lg font-bold text-accent flex items-center gap-2">
+            <BarChart3 size={18} /> Sondages &amp; Votes communautaires
+          </h2>
+          <button
+            type="button"
+            onClick={() => onNavigate('sondages')}
+            className="text-xs text-accent hover:underline font-semibold cursor-pointer whitespace-nowrap self-end sm:self-auto"
+          >
+            {polls.length > 0 ? 'Participer aux votes →' : 'Lancer un sondage →'}
+          </button>
+        </div>
+
+        {polls.length === 0 ? (
+          <div className="py-5 px-4 bg-[#252840]/40 rounded-2xl border border-accent/12 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-[#a09888] text-center sm:text-left">
+              Aucun sondage actif. Recueillez l&apos;avis de la communauté sur la prochaine rencontre ou les projets.
+            </p>
+            <button
+              type="button"
+              onClick={() => onNavigate('sondages')}
+              className="px-3.5 py-2 bg-[#252840] text-accent text-xs font-semibold rounded-xl hover:bg-accent hover:text-accent-contrast transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              Créer un sondage
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {polls.slice(0, 2).map(poll => {
+              const totalVotes = poll.options.reduce((s, o) => s + o.voterEmails.length, 0);
+              return (
+                <button
+                  key={poll.id}
+                  type="button"
+                  onClick={() => onNavigate('sondages')}
+                  className="text-left p-4 bg-[#252840]/55 hover:bg-[#252840] border border-accent/14 hover:border-accent/45 rounded-2xl transition-colors cursor-pointer space-y-2"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-sm font-bold text-white line-clamp-1">{poll.question}</h3>
+                    <span className={`text-[11px] font-semibold shrink-0 ${poll.closed ? 'text-red-400' : 'text-emerald-400'}`}>
+                      {poll.closed ? 'Clôturé' : 'Ouvert'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-[#a09888] tabular-nums">
+                    {poll.options.length} choix · {totalVotes} vote{totalVotes > 1 ? 's' : ''}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* Galerie des anciens événements */}
       <section
@@ -465,16 +530,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     </div>
                   </div>
 
-                  <div>
-                    <div className="w-full h-2 bg-[#1a1d2e] rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-accent to-accent-highlight rounded-full"
-                        style={{ width: `${pct}%` }}
-                      />
+                  <div className="space-y-3">
+                    <div>
+                      <div className="w-full h-2 bg-[#1a1d2e] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-accent to-accent-highlight rounded-full"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="text-[11px] text-[#a09888] mt-2 tabular-nums">
+                        {e.participants} contributeur{e.participants > 1 ? 's' : ''}
+                      </div>
                     </div>
-                    <div className="text-[11px] text-[#a09888] mt-2 tabular-nums">
-                      {e.participants} participants
-                    </div>
+
+                    <EventRsvpControls
+                      event={e}
+                      userEmail={user.email}
+                      onRsvp={onRsvpEvent}
+                      onOpenParticipants={onOpenEventParticipants}
+                    />
                   </div>
                 </div>
               );

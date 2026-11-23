@@ -19,6 +19,7 @@ const NAV_ITEMS: { id: PageId; label: string }[] = [
   { id: 'dashboard', label: 'Tableau de bord' },
   { id: 'alumni', label: 'Anciens' },
   { id: 'info', label: 'Informations' },
+  { id: 'sondages', label: 'Sondages' },
   { id: 'cotisations', label: 'Cotisations' },
   { id: 'discussions', label: 'Discussions' },
   { id: 'settings', label: 'Paramètres' },
@@ -73,7 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Zone 2: Primary Nav Links */}
-          <nav className="hidden lg:flex items-center gap-5" aria-label="Navigation principale">
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-5" aria-label="Navigation principale">
             {NAV_ITEMS.map(item => {
               const isActive = currentPage === item.id;
               const showBadge = item.id === 'discussions' && unreadDiscussionsCount > 0;

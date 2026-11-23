@@ -21,9 +21,11 @@ import {
   Conversation,
   Cotisation,
   EventFund,
+  EventRsvpStatus,
   GalleryCategory,
   GalleryPhoto,
   PageId,
+  Poll,
   Post,
   PostType,
   ToastItem,
@@ -37,6 +39,7 @@ import { Modal } from './components/Modal';
 import { DashboardPage } from './components/DashboardPage';
 import { AlumniPage } from './components/AlumniPage';
 import { InfoPage } from './components/InfoPage';
+import { PollsPage } from './components/PollsPage';
 import { CotisationsPage } from './components/CotisationsPage';
 import { DiscussionsPage } from './components/DiscussionsPage';
 import { ProfilePage } from './components/ProfilePage';
@@ -54,6 +57,7 @@ import {
   CreateSalonModalBody,
   EditGalleryPhotoModalBody,
   EventFormModalBody,
+  EventParticipantsModalBody,
   GalleryPhotoModalBody,
   NotificationsModalBody,
   PayModalBody,
@@ -74,6 +78,7 @@ type ActiveModalState =
   | { type: 'createEvent' }
   | { type: 'editEvent'; event: EventFund }
   | { type: 'confirmDeleteEvent'; event: EventFund }
+  | { type: 'eventParticipants'; eventId: number }
   | null;
 
 const LEGACY_DEMO_ALUMNI_EMAILS = new Set([
@@ -264,6 +269,27 @@ export default function App() {
     return EVENT_FUNDS;
   });
 
+  const [polls, setPolls] = useState<Poll[]>(() => {
+    try {
+      const saved = localStorage.getItem('anciens_polls');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // Fallback to empty polls
+    }
+    return [];
+  });
+
+  const [gmpQuotaExceeded, setGmpQuotaExceeded] = useState(false);
+
+  useEffect(() => {
+    const onQuotaExceeded = () => setGmpQuotaExceeded(true);
+    window.addEventListener('gmp-quota-exceeded', onQuotaExceeded);
+    return () => window.removeEventListener('gmp-quota-exceeded', onQuotaExceeded);
+  }, []);
+
   const [conversations, setConversations] = useState<Conversation[]>(() => {
     try {
       const saved = localStorage.getItem('anciens_conversations');
@@ -389,6 +415,14 @@ export default function App() {
       // Ignore storage quota errors
     }
   }, [eventFunds]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('anciens_polls', JSON.stringify(polls));
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [polls]);
 
   useEffect(() => {
     try {
@@ -1072,7 +1106,9 @@ export default function App() {
     if (existingId !== undefined) {
       const previous = eventFunds.find(ef => ef.id === existingId);
       setEventFunds(prev =>
-        prev.map(ef => (ef.id === existingId ? { id: existingId, ...data } : ef))
+        prev.map(ef =>
+          ef.id === existingId ? { id: existingId, ...data, rsvps: ef.rsvps || [] } : ef
+        )
       );
       if (previous && previous.name !== data.name) {
         setCotisations(prev =>
@@ -1087,6 +1123,7 @@ export default function App() {
     const newEvent: EventFund = {
       id: Date.now(),
       ...data,
+      rsvps: [],
     };
     setEventFunds(prev => [newEvent, ...prev]);
     setActiveModal(null);
@@ -1107,6 +1144,146 @@ export default function App() {
       targetEvent ? `Événement "${targetEvent.name}" supprimé` : 'Événement supprimé',
       'info'
     );
+  };
+
+  const handleRsvpEvent = (eventId: number, status: EventRsvpStatus) => {
+    if (!user) return;
+    const email = user.email.trim().toLowerCase();
+    const today = new Date().toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+    });
+    const statusLabelMap: Record<EventRsvpStatus, string> = {
+      going: 'Je participe',
+      maybe: 'Peut-être',
+      not_going: 'Absent',
+    };
+
+    let actionFeedback = '';
+    setEventFunds(prev =>
+      prev.map(ef => {
+        if (ef.id !== eventId) return ef;
+        const currentRsvps = ef.rsvps || [];
+        const existing = currentRsvps.find(r => r.alumnusEmail.toLowerCase() === email);
+
+        if (existing && existing.status === status) {
+          actionFeedback = `Réponse RSVP retirée pour "${ef.name}"`;
+          return {
+            ...ef,
+            rsvps: currentRsvps.filter(r => r.alumnusEmail.toLowerCase() !== email),
+          };
+        }
+
+        const nextEntry = {
+          alumnusName: user.name,
+          alumnusEmail: user.email,
+          avatar: user.avatar,
+          promo: user.promo || `Promo ${user.year}`,
+          status,
+          updatedAt: today,
+        };
+        actionFeedback = `Présence confirmée : ${statusLabelMap[status]} (${ef.name})`;
+        return {
+          ...ef,
+          rsvps: existing
+            ? currentRsvps.map(r => (r.alumnusEmail.toLowerCase() === email ? nextEntry : r))
+            : [nextEntry, ...currentRsvps],
+        };
+      })
+    );
+
+    if (actionFeedback) {
+      showToast(actionFeedback, 'success');
+    }
+  };
+
+  const handleCreatePoll = (data: {
+    question: string;
+    description?: string;
+    optionLabels: string[];
+    allowMultiple: boolean;
+    deadline?: string;
+  }) => {
+    if (!user) return;
+    const createdAt = new Date().toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+    const newPoll: Poll = {
+      id: Date.now(),
+      question: data.question,
+      description: data.description,
+      options: data.optionLabels.map((label, idx) => ({
+        id: `opt_${Date.now()}_${idx}`,
+        label,
+        voterEmails: [],
+      })),
+      allowMultiple: data.allowMultiple,
+      createdBy: user.name,
+      createdByEmail: user.email,
+      createdByAvatar: user.avatar,
+      createdAt,
+      deadline: data.deadline,
+      closed: false,
+    };
+    setPolls(prev => [newPoll, ...prev]);
+    showToast('Sondage publié', 'success');
+    pushNotification({
+      title: `Nouveau sondage · ${user.name}`,
+      message: data.question,
+      category: 'poll',
+      targetPage: 'sondages',
+    });
+  };
+
+  const handleVotePoll = (pollId: number, optionId: string) => {
+    if (!user) return;
+    const email = user.email.trim().toLowerCase();
+    setPolls(prev =>
+      prev.map(poll => {
+        if (poll.id !== pollId || poll.closed) return poll;
+        return {
+          ...poll,
+          options: poll.options.map(opt => {
+            const hasVotedThis = opt.voterEmails.includes(email);
+            if (poll.allowMultiple) {
+              if (opt.id !== optionId) return opt;
+              return {
+                ...opt,
+                voterEmails: hasVotedThis
+                  ? opt.voterEmails.filter(e => e !== email)
+                  : [...opt.voterEmails, email],
+              };
+            }
+            if (opt.id === optionId) {
+              return {
+                ...opt,
+                voterEmails: hasVotedThis
+                  ? opt.voterEmails.filter(e => e !== email)
+                  : [...opt.voterEmails, email],
+              };
+            }
+            return {
+              ...opt,
+              voterEmails: opt.voterEmails.filter(e => e !== email),
+            };
+          }),
+        };
+      })
+    );
+  };
+
+  const handleToggleClosePoll = (pollId: number) => {
+    setPolls(prev =>
+      prev.map(p => (p.id === pollId ? { ...p, closed: !p.closed } : p))
+    );
+    showToast('Statut du sondage mis à jour', 'info');
+  };
+
+  const handleDeletePoll = (pollId: number) => {
+    setPolls(prev => prev.filter(p => p.id !== pollId));
+    showToast('Sondage supprimé', 'info');
   };
 
   const handleDeleteAlumnus = (alumnusId: number) => {
@@ -1153,9 +1330,31 @@ export default function App() {
   const unreadNotificationsCount = notifications.filter(n => !n.read).length;
   const unreadDiscussionsCount = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
 
+  const selectedParticipantsEvent =
+    activeModal?.type === 'eventParticipants'
+      ? eventFunds.find(ef => ef.id === activeModal.eventId) || null
+      : null;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0f1117] text-[#e8e0d0]">
       <ToastContainer toasts={toasts} />
+
+      {gmpQuotaExceeded && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm">
+          <span>
+            Google Maps Platform quota reached. If you are the app owner, visit{' '}
+            <a
+              href="https://developers.google.com/maps/ai/ai-studio?utm_campaign=gmp_mcp_codeassist_v1_aistudio#quota_exceeded_errors"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-semibold text-amber-950 hover:text-amber-800"
+            >
+              maps developer site
+            </a>{' '}
+            for instructions to update your account.
+          </span>
+        </div>
+      )}
 
       <Modal
         isOpen={activeModal !== null}
@@ -1274,6 +1473,13 @@ export default function App() {
             onConfirm={() => handleDeleteEvent(activeModal.event.id)}
           />
         )}
+        {activeModal?.type === 'eventParticipants' && selectedParticipantsEvent && (
+          <EventParticipantsModalBody
+            event={selectedParticipantsEvent}
+            userEmail={user.email}
+            onRsvp={handleRsvpEvent}
+          />
+        )}
       </Modal>
 
       <Navbar
@@ -1292,6 +1498,7 @@ export default function App() {
             user={user}
             alumniList={alumniList}
             posts={posts}
+            polls={polls}
             cotisations={cotisations}
             eventFunds={eventFunds}
             galleryPhotos={galleryPhotos}
@@ -1309,6 +1516,10 @@ export default function App() {
             onEditEvent={event => setActiveModal({ type: 'editEvent', event })}
             onRequestDeleteEvent={event =>
               setActiveModal({ type: 'confirmDeleteEvent', event })
+            }
+            onRsvpEvent={handleRsvpEvent}
+            onOpenEventParticipants={event =>
+              setActiveModal({ type: 'eventParticipants', eventId: event.id })
             }
           />
         )}
@@ -1335,8 +1546,22 @@ export default function App() {
           />
         )}
 
+        {currentPage === 'sondages' && (
+          <PollsPage
+            user={user}
+            polls={polls}
+            onCreatePoll={handleCreatePoll}
+            onVotePoll={handleVotePoll}
+            onToggleClosePoll={handleToggleClosePoll}
+            onDeletePoll={handleDeletePoll}
+            onShowToast={showToast}
+          />
+        )}
+
         {currentPage === 'cotisations' && (
           <CotisationsPage
+            user={user}
+            appSettings={appSettings}
             cotisations={cotisations}
             eventFunds={eventFunds}
             onPayCotisation={handlePayCotisation}
@@ -1349,6 +1574,11 @@ export default function App() {
             onRequestDeleteEvent={event =>
               setActiveModal({ type: 'confirmDeleteEvent', event })
             }
+            onRsvpEvent={handleRsvpEvent}
+            onOpenEventParticipants={event =>
+              setActiveModal({ type: 'eventParticipants', eventId: event.id })
+            }
+            onShowToast={showToast}
           />
         )}
 

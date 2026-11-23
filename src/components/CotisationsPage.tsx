@@ -1,9 +1,29 @@
 import React, { useState } from 'react';
-import { Check, Copy, CreditCard, Pencil, Plus, ShieldCheck, Smartphone, Trash2 } from 'lucide-react';
-import { Cotisation, EventFund } from '../types';
+import {
+  Check,
+  Copy,
+  CreditCard,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Pencil,
+  Plus,
+  ShieldCheck,
+  Smartphone,
+  Trash2,
+} from 'lucide-react';
+import { AppSettings, Cotisation, EventFund, EventRsvpStatus, UserProfile } from '../types';
 import { COTISATION_PAYMENT_CHANNEL } from '../data/demoData';
+import {
+  exportCotisationsToCSV,
+  exportCotisationsToPDF,
+  exportSingleReceiptPDF,
+} from '../utils/exportCotisations';
+import { EventRsvpControls } from './EventRsvpControls';
 
 interface CotisationsPageProps {
+  user: UserProfile;
+  appSettings: AppSettings;
   cotisations: Cotisation[];
   eventFunds: EventFund[];
   onPayCotisation: (cotiId: number) => void;
@@ -12,9 +32,16 @@ interface CotisationsPageProps {
   onOpenCreateEvent: () => void;
   onEditEvent: (event: EventFund) => void;
   onRequestDeleteEvent: (event: EventFund) => void;
+  onRsvpEvent: (eventId: number, status: EventRsvpStatus) => void;
+  onOpenEventParticipants: (event: EventFund) => void;
+  onShowToast: (msg: string, type: 'success' | 'error' | 'info') => void;
 }
 
+type CotisationFilter = 'all' | 'paid' | 'awaiting_confirmation' | 'unpaid';
+
 export const CotisationsPage: React.FC<CotisationsPageProps> = ({
+  user,
+  appSettings,
   cotisations,
   eventFunds,
   onPayCotisation,
@@ -23,14 +50,26 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
   onOpenCreateEvent,
   onEditEvent,
   onRequestDeleteEvent,
+  onRsvpEvent,
+  onOpenEventParticipants,
+  onShowToast,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<CotisationFilter>('all');
+
   const paidList = cotisations.filter(c => c.status === 'paid');
   const awaitingList = cotisations.filter(c => c.status === 'awaiting_confirmation');
   const unpaidCount = cotisations.filter(
     c => c.status === 'pending' || c.status === 'overdue'
   ).length;
   const totalPaid = paidList.reduce((sum, c) => sum + c.amount, 0);
+
+  const visibleCotisations = cotisations.filter(c => {
+    if (statusFilter === 'paid') return c.status === 'paid';
+    if (statusFilter === 'awaiting_confirmation') return c.status === 'awaiting_confirmation';
+    if (statusFilter === 'unpaid') return c.status === 'pending' || c.status === 'overdue';
+    return true;
+  });
 
   const handleCopyNumber = async () => {
     try {
@@ -40,6 +79,29 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
     } catch {
       // Clipboard unavailable in restricted contexts
     }
+  };
+
+  const handleExportCSV = () => {
+    if (visibleCotisations.length === 0) {
+      onShowToast('Aucune cotisation à exporter en CSV', 'info');
+      return;
+    }
+    exportCotisationsToCSV(visibleCotisations, appSettings.appName);
+    onShowToast('Export CSV téléchargé', 'success');
+  };
+
+  const handleExportPDF = () => {
+    if (visibleCotisations.length === 0 && eventFunds.length === 0) {
+      onShowToast('Aucune cotisation ou cagnotte à exporter en PDF', 'info');
+      return;
+    }
+    exportCotisationsToPDF(visibleCotisations, eventFunds, appSettings, user);
+    onShowToast('Relevé PDF téléchargé', 'success');
+  };
+
+  const handleDownloadReceipt = (cotisation: Cotisation) => {
+    exportSingleReceiptPDF(cotisation, appSettings, user);
+    onShowToast(`Reçu PDF généré pour "${cotisation.event}"`, 'success');
   };
 
   const renderStatus = (c: Cotisation) => {
@@ -76,14 +138,30 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold text-accent">Cotisations & Contributions</h1>
-        <button
-          type="button"
-          onClick={onOpenPayModal}
-          className="px-4 py-2.5 bg-accent text-accent-contrast font-bold rounded-xl text-xs hover:bg-accent-light transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow whitespace-nowrap shrink-0"
-        >
-          <Plus size={15} /> Payer une cotisation
-        </button>
+        <h1 className="text-2xl font-extrabold text-accent">Cotisations &amp; Contributions</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleExportCSV}
+            className="px-3.5 py-2.5 bg-[#1a1d2e] border border-accent/25 text-[#e8e0d0] hover:border-accent hover:text-accent font-semibold rounded-xl text-xs transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
+          >
+            <FileSpreadsheet size={15} /> Exporter CSV
+          </button>
+          <button
+            type="button"
+            onClick={handleExportPDF}
+            className="px-3.5 py-2.5 bg-[#1a1d2e] border border-accent/25 text-[#e8e0d0] hover:border-accent hover:text-accent font-semibold rounded-xl text-xs transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
+          >
+            <FileText size={15} /> Relevé PDF
+          </button>
+          <button
+            type="button"
+            onClick={onOpenPayModal}
+            className="px-4 py-2.5 bg-accent text-accent-contrast font-bold rounded-xl text-xs hover:bg-accent-light transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow whitespace-nowrap shrink-0"
+          >
+            <Plus size={15} /> Payer une cotisation
+          </button>
+        </div>
       </div>
 
       {/* Financial KPIs */}
@@ -156,10 +234,36 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
 
       {/* Personal Cotisations History */}
       <section className="bg-[#1a1d2e] border border-accent/16 rounded-3xl p-5 sm:p-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <h2 className="text-base sm:text-lg font-bold text-accent flex items-center gap-2">
             <CreditCard size={18} /> Mes cotisations
           </h2>
+
+          {cotisations.length > 0 && (
+            <div className="flex items-center gap-1 bg-[#252840] p-1 rounded-xl overflow-x-auto">
+              {(
+                [
+                  { id: 'all', label: `Toutes (${cotisations.length})` },
+                  { id: 'paid', label: `Payées (${paidList.length})` },
+                  { id: 'awaiting_confirmation', label: `Attente (${awaitingList.length})` },
+                  { id: 'unpaid', label: `À régler (${unpaidCount})` },
+                ] as { id: CotisationFilter; label: string }[]
+              ).map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setStatusFilter(tab.id)}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 tabular-nums ${
+                    statusFilter === tab.id
+                      ? 'bg-accent text-accent-contrast'
+                      : 'text-[#a09888] hover:text-white'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {cotisations.length === 0 ? (
@@ -168,7 +272,7 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
               Aucune cotisation enregistrée pour le moment
             </p>
             <p className="text-xs text-[#a09888] mt-1">
-              Déclarez un paiement MTN Mobile Money pour suivre vos contributions ici.
+              Déclarez un paiement MTN Mobile Money pour suivre vos contributions et télécharger vos reçus PDF ici.
             </p>
             <button
               type="button"
@@ -177,6 +281,10 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
             >
               <Plus size={14} /> Payer une cotisation
             </button>
+          </div>
+        ) : visibleCotisations.length === 0 ? (
+          <div className="py-8 px-4 text-center bg-[#252840]/40 rounded-2xl border border-accent/12 text-xs text-[#a09888]">
+            Aucune cotisation dans ce filtre.
           </div>
         ) : (
           <>
@@ -193,7 +301,7 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
                   </tr>
                 </thead>
                 <tbody className="text-sm divide-y divide-accent/10">
-                  {cotisations.map(c => (
+                  {visibleCotisations.map(c => (
                     <tr key={c.id} className="hover:bg-[#252840]/30 transition-colors">
                       <td className="py-3.5 px-4 font-semibold text-white">{c.event}</td>
                       <td className="py-3.5 px-4 font-mono tabular-nums text-right">
@@ -215,7 +323,13 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
                             Validation requise
                           </span>
                         ) : (
-                          <span className="text-[#605848]">—</span>
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadReceipt(c)}
+                            className="px-3 py-1.5 bg-[#252840] border border-accent/25 text-accent hover:bg-accent hover:text-accent-contrast font-semibold rounded-lg text-xs transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap"
+                          >
+                            <Download size={13} /> Reçu PDF
+                          </button>
                         )}
                       </td>
                     </tr>
@@ -226,7 +340,7 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
 
             {/* Mobile Card Stack */}
             <div className="md:hidden divide-y divide-accent/12">
-              {cotisations.map(c => (
+              {visibleCotisations.map(c => (
                 <div key={c.id} className="py-3.5 first:pt-1 last:pb-1 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-semibold text-sm text-white truncate">{c.event}</div>
@@ -237,7 +351,7 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
                     </div>
                     <div className="mt-1">{renderStatus(c)}</div>
                   </div>
-                  {(c.status === 'pending' || c.status === 'overdue') && (
+                  {(c.status === 'pending' || c.status === 'overdue') ? (
                     <button
                       type="button"
                       onClick={() => onPayCotisation(c.id)}
@@ -245,7 +359,15 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
                     >
                       Payer
                     </button>
-                  )}
+                  ) : c.status === 'paid' ? (
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadReceipt(c)}
+                      className="px-3 py-2 bg-[#252840] border border-accent/25 text-accent rounded-xl text-xs font-semibold flex items-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Download size={13} /> Reçu
+                    </button>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -307,7 +429,7 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
         )}
       </section>
 
-      {/* Active Event Funds */}
+      {/* Active Event Funds with RSVP */}
       <section className="bg-[#1a1d2e] border border-accent/16 rounded-3xl p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <h2 className="text-base sm:text-lg font-bold text-accent">
@@ -326,7 +448,7 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
           <div className="py-8 px-4 text-center bg-[#252840]/40 rounded-2xl border border-accent/12">
             <p className="text-sm font-semibold text-white">Aucun événement en cours</p>
             <p className="text-xs text-[#a09888] mt-1">
-              Créez un événement pour suivre les cotisations et objectifs de la communauté.
+              Créez un événement pour suivre les cotisations et confirmer la présence des membres (RSVP).
             </p>
             <button
               type="button"
@@ -337,7 +459,7 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {eventFunds.map(e => {
               const pct =
                 e.target > 0 ? Math.min(100, Math.round((e.collected / e.target) * 100)) : 0;
@@ -393,16 +515,25 @@ export const CotisationsPage: React.FC<CotisationsPageProps> = ({
                     </div>
                   </div>
 
-                  <div>
-                    <div className="w-full h-2 bg-[#1a1d2e] rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-accent to-accent-highlight rounded-full"
-                        style={{ width: `${pct}%` }}
-                      />
+                  <div className="space-y-3">
+                    <div>
+                      <div className="w-full h-2 bg-[#1a1d2e] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-accent to-accent-highlight rounded-full"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="text-[11px] text-[#a09888] mt-2 tabular-nums">
+                        {e.participants} contributeur{e.participants > 1 ? 's' : ''}
+                      </div>
                     </div>
-                    <div className="text-[11px] text-[#a09888] mt-2 tabular-nums">
-                      {e.participants} participants
-                    </div>
+
+                    <EventRsvpControls
+                      event={e}
+                      userEmail={user.email}
+                      onRsvp={onRsvpEvent}
+                      onOpenParticipants={onOpenEventParticipants}
+                    />
                   </div>
                 </div>
               );

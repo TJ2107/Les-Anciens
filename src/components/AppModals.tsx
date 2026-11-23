@@ -10,6 +10,7 @@ import {
   Copy,
   CreditCard,
   Heart,
+  HelpCircle,
   ImagePlus,
   MessageSquare,
   Newspaper,
@@ -18,7 +19,10 @@ import {
   Share2,
   ShieldCheck,
   Trash2,
+  Users,
+  Vote,
   X,
+  XCircle,
 } from 'lucide-react';
 import {
   Alumnus,
@@ -143,6 +147,11 @@ const CATEGORY_META: Record<
     label: 'Informations',
     icon: <Newspaper size={16} />,
     toneClass: 'bg-emerald-500/15 text-emerald-400',
+  },
+  poll: {
+    label: 'Sondages',
+    icon: <Vote size={16} />,
+    toneClass: 'bg-purple-500/15 text-purple-300',
   },
   discussion: {
     label: 'Discussions',
@@ -1632,3 +1641,124 @@ export const ConfirmDeleteAlumnusModalBody: React.FC<ConfirmDeleteAlumnusModalBo
     </div>
   </div>
 );
+
+interface EventParticipantsModalBodyProps {
+  event: EventFund;
+  userEmail: string;
+  onRsvp: (eventId: number, status: 'going' | 'maybe' | 'not_going') => void;
+}
+
+export const EventParticipantsModalBody: React.FC<EventParticipantsModalBodyProps> = ({
+  event,
+  userEmail,
+  onRsvp,
+}) => {
+  const rsvps = event.rsvps || [];
+  const going = rsvps.filter(r => r.status === 'going');
+  const maybe = rsvps.filter(r => r.status === 'maybe');
+  const notGoing = rsvps.filter(r => r.status === 'not_going');
+  const userStatus = rsvps.find(
+    r => r.alumnusEmail.toLowerCase() === userEmail.trim().toLowerCase()
+  )?.status;
+
+  const renderGroup = (
+    title: string,
+    toneClass: string,
+    items: typeof rsvps
+  ) => (
+    <div className="space-y-2">
+      <div className={`text-xs font-bold flex items-center justify-between ${toneClass}`}>
+        <span>{title}</span>
+        <span className="font-mono tabular-nums">{items.length}</span>
+      </div>
+      {items.length === 0 ? (
+        <div className="text-xs text-[#706858] px-3 py-2 rounded-xl bg-[#252840]/40">
+          Aucun membre dans cette catégorie.
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          {items.map(item => (
+            <div
+              key={item.alumnusEmail}
+              className="flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl bg-[#252840]/70 border border-accent/12"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-[#1a1d2e] flex items-center justify-center text-sm shrink-0 overflow-hidden">
+                  <AvatarDisplay avatar={item.avatar} alt={item.alumnusName} />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-white truncate">
+                    {item.alumnusName}
+                  </div>
+                  {item.promo && (
+                    <div className="text-[11px] text-[#a09888] truncate">{item.promo}</div>
+                  )}
+                </div>
+              </div>
+              <span className="text-[10px] text-[#807868] font-mono tabular-nums shrink-0">
+                {item.updatedAt}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="pr-10">
+        <h2 className="text-lg font-bold text-accent flex items-center gap-2">
+          <Users size={19} /> Participants · {event.name}
+        </h2>
+        <p className="text-xs text-[#a09888] mt-1 tabular-nums">
+          {event.startDate} — {event.deadline} · {rsvps.length} réponse{rsvps.length > 1 ? 's' : ''} enregistrée{rsvps.length > 1 ? 's' : ''}
+        </p>
+      </div>
+
+      {/* Quick RSVP Toggle inside modal */}
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          onClick={() => onRsvp(event.id, 'going')}
+          className={`px-2.5 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+            userStatus === 'going'
+              ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+              : 'bg-[#252840] border-accent/15 text-[#a09888] hover:text-white'
+          }`}
+        >
+          <Check size={13} /> Je participe
+        </button>
+        <button
+          type="button"
+          onClick={() => onRsvp(event.id, 'maybe')}
+          className={`px-2.5 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+            userStatus === 'maybe'
+              ? 'bg-amber-500/20 border-amber-400 text-amber-300'
+              : 'bg-[#252840] border-accent/15 text-[#a09888] hover:text-white'
+          }`}
+        >
+          <HelpCircle size={13} /> Peut-être
+        </button>
+        <button
+          type="button"
+          onClick={() => onRsvp(event.id, 'not_going')}
+          className={`px-2.5 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+            userStatus === 'not_going'
+              ? 'bg-red-500/20 border-red-400 text-red-300'
+              : 'bg-[#252840] border-accent/15 text-[#a09888] hover:text-white'
+          }`}
+        >
+          <XCircle size={13} /> Absent
+        </button>
+      </div>
+
+      <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
+        {renderGroup('Je participe', 'text-emerald-400', going)}
+        {renderGroup('Peut-être', 'text-amber-400', maybe)}
+        {renderGroup('Absent(s)', 'text-red-400', notGoing)}
+      </div>
+    </div>
+  );
+};
+

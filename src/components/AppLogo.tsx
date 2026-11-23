@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface AppLogoProps {
   logo: string;
@@ -14,6 +14,10 @@ export const AppLogo: React.FC<AppLogoProps> = ({
   emojiClass = 'text-xl',
 }) => {
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [logo]);
   const isImage =
     !failed &&
     Boolean(logo) &&

@@ -244,23 +244,40 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
             <div>
               <div className="text-xs text-[#a09888] mb-2">Icônes prédéfinies</div>
-              <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
-                {LOGO_PRESETS.map(emoji => {
-                  const selected = settings.logo === emoji;
+              <div className="grid grid-cols-6 sm:grid-cols-11 gap-2">
+                {LOGO_PRESETS.map(preset => {
+                  const selected = settings.logo === preset;
+                  const isImagePreset =
+                    preset.startsWith('/') ||
+                    preset.startsWith('data:image/') ||
+                    preset.startsWith('http');
                   return (
                     <button
-                      key={emoji}
+                      key={preset}
                       type="button"
-                      onClick={() => handleSelectLogoPreset(emoji)}
-                      aria-label={`Choisir le logo ${emoji}`}
+                      onClick={() => handleSelectLogoPreset(preset)}
+                      aria-label={
+                        isImagePreset
+                          ? 'Choisir le logo officiel de l’application'
+                          : `Choisir le logo ${preset}`
+                      }
+                      title={isImagePreset ? 'Logo officiel' : preset}
                       aria-pressed={selected}
-                      className={`h-11 rounded-xl text-xl flex items-center justify-center border transition-all cursor-pointer ${
+                      className={`h-11 rounded-xl text-xl flex items-center justify-center border overflow-hidden transition-all cursor-pointer ${
                         selected
-                          ? 'bg-accent/20 border-accent scale-105 shadow-sm'
+                          ? 'bg-accent/20 border-accent scale-105 shadow-sm ring-1 ring-accent/40'
                           : 'bg-[#252840] border-accent/14 hover:border-accent/50'
                       }`}
                     >
-                      {emoji}
+                      {isImagePreset ? (
+                        <img
+                          src={preset}
+                          alt={`Logo ${settings.appName}`}
+                          className="w-8 h-8 rounded-lg object-cover"
+                        />
+                      ) : (
+                        preset
+                      )}
                     </button>
                   );
                 })}
